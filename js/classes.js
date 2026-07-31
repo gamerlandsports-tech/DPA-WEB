@@ -392,10 +392,37 @@ const Classes = {
     });
   },
 
+  _updateTipoOptions() {
+    const personsInput = document.getElementById('classPersonas');
+    const tipoSelect   = document.getElementById('classTipo');
+    if (!tipoSelect) return;
+
+    const indOption = tipoSelect.querySelector('option[value="individual"]');
+    const count = parseInt(personsInput.value) || this._selectedStudents.length || 1;
+
+    if (count >= 2) {
+      if (indOption) {
+        indOption.disabled = true;
+        indOption.hidden = true;
+      }
+      // If "individual" was currently selected, auto-switch to "grupal"
+      if (tipoSelect.value === 'individual') {
+        tipoSelect.value = 'grupal';
+      }
+    } else {
+      if (indOption) {
+        indOption.disabled = false;
+        indOption.hidden = false;
+      }
+    }
+  },
+
   /* ================================================================
      VALUE PREVIEW (auto-calculate)
      ================================================================ */
   _updateValuePreview() {
+    this._updateTipoOptions();
+
     const tipo    = document.getElementById('classTipo').value;
     const persons = parseInt(document.getElementById('classPersonas').value) || this._selectedStudents.length || 1;
     const manual  = document.getElementById('classValorManual').value;
@@ -449,6 +476,10 @@ const Classes = {
     }
     if (!tipo) {
       App.showToast('Por favor seleccione el tipo de clase', 'error');
+      return;
+    }
+    if (persons >= 2 && tipo === 'individual') {
+      App.showToast('Una clase con 2 o más personas debe ser Grupal o Academia', 'error');
       return;
     }
 
