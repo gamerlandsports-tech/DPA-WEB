@@ -1,0 +1,224 @@
+/* ============================================================
+   DPA — calendar.css — Calendario Mensual y Vista Diaria
+   ============================================================ */
+
+/* ---- Controls ---- */
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.calendar-month-title {
+  font-size: 22px;
+  font-weight: 800;
+  text-transform: capitalize;
+  flex: 1;
+  text-align: center;
+}
+
+/* ---- Legend ---- */
+.calendar-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.dot-completed { background: var(--green); }
+.dot-cancelled { background: var(--red); }
+.dot-pending   { background: var(--orange); }
+
+/* ---- Monthly Grid ---- */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+/* Day of week headers */
+.cal-weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 4px 0 8px;
+}
+.cal-weekday.weekend { color: var(--accent); }
+
+/* Day cells */
+.cal-day {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 8px 8px;
+  min-height: 88px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cal-day:hover {
+  border-color: rgba(34,197,94,0.4);
+  background: var(--bg-card-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.cal-day.empty {
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.03);
+  cursor: default;
+  pointer-events: none;
+}
+.cal-day.empty:hover { transform: none; box-shadow: none; }
+
+.cal-day.today {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-glow);
+}
+.cal-day.today .cal-day-num { color: var(--accent); }
+
+.cal-day.selected {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+}
+
+.cal-day.weekend .cal-day-num {
+  color: var(--accent-light);
+}
+
+/* Day number */
+.cal-day-num {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+/* Class count indicator */
+.cal-class-count {
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--accent-glow);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 2px 5px;
+  align-self: flex-start;
+}
+
+/* Status dots row */
+.cal-status-dots {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+.cal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.cal-dot-completed { background: var(--green); }
+.cal-dot-cancelled { background: var(--red); }
+.cal-dot-pending   { background: var(--orange); }
+
+/* Income mini display */
+.cal-income {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ---- Monthly Summary Cards ---- */
+.month-summary {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  flex: 1;
+  min-width: 100px;
+  gap: 4px;
+  transition: border-color var(--transition);
+}
+.summary-card:hover { border-color: rgba(34,197,94,0.3); }
+.sc-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.sc-value.green  { color: var(--green); }
+.sc-value.red    { color: var(--red); }
+.sc-value.accent { color: var(--accent); }
+.sc-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+/* ============================================================
+   DAILY VIEW
+   ============================================================ */
+.view-active  { display: block; }
+.view-hidden  { display: none; }
+
+.daily-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.daily-title {
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: capitalize;
+  flex: 1;
+}
+
+/* ============================================================
+   RESPONSIVE CALENDAR
+   ============================================================ */
+@media (max-width: 640px) {
+  .calendar-grid { gap: 4px; }
+  .cal-day {
+    min-height: 64px;
+    padding: 6px 4px 4px;
+  }
+  .cal-day-num { font-size: 13px; }
+  .cal-class-count { font-size: 9px; }
+  .calendar-month-title { font-size: 18px; }
+  .month-summary { gap: 8px; }
+  .summary-card { padding: 10px 12px; min-width: 80px; }
+  .sc-value { font-size: 18px; }
+}

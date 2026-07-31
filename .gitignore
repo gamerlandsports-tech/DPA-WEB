@@ -1,0 +1,9 @@
+# Configuración de Firebase (credenciales privadas)
+js/firebase-config.js
+
+# Archivos del sistema / IDE
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/

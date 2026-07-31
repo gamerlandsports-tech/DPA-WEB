@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DPA - Sistema de gestión de clases de pádel. Registro de profesores, alumnos, calendario y estadísticas." />
+  <title>DPA — Gestión de Clases de Pádel</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/calendar.css" />
+  <link rel="stylesheet" href="css/classes.css" />
+  <link rel="stylesheet" href="css/students.css" />
+</head>
+<body>
+
+  <!-- ============ LOGIN SCREEN ============ -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-bg-orb orb1"></div>
+    <div class="login-bg-orb orb2"></div>
+    <div class="login-bg-orb orb3"></div>
+
+    <div class="login-card" id="loginCard">
+      <!-- Brand -->
+      <div class="login-brand">
+        <div class="login-brand-icon">🎾</div>
+        <div>
+          <div class="login-brand-name">DPA</div>
+          <div class="login-brand-sub">Pádel Manager</div>
+        </div>
+      </div>
+
+      <!-- Mode selector -->
+      <div class="login-mode-tabs" id="loginModeTabs">
+        <button class="lmt-btn active" id="tabProfessor" data-tab="professor">
+          <span>👤</span> Profesor
+        </button>
+        <button class="lmt-btn" id="tabAdmin" data-tab="admin">
+          <span>🔐</span> Administrador
+        </button>
+      </div>
+
+      <!-- PROFESSOR LOGIN -->
+      <div class="login-panel active" id="panelProfessor">
+        <p class="login-hint">Seleccioná tu perfil para ingresar</p>
+        <div class="form-group">
+          <label for="loginProfSelect">Elegir Profesor</label>
+          <select id="loginProfSelect" class="form-control login-select">
+            <option value="">— Seleccionar —</option>
+          </select>
+        </div>
+        <div class="login-no-profs" id="loginNoProfs" style="display:none">
+          <p>No hay profesores registrados.<br>Ingresá como <strong>Administrador</strong> para crear el primer profesor.</p>
+        </div>
+        <button class="btn btn-primary btn-login" id="btnLoginProf">
+          Ingresar →
+        </button>
+      </div>
+
+      <!-- ADMIN LOGIN -->
+      <div class="login-panel" id="panelAdmin">
+        <p class="login-hint">Acceso con credenciales de administrador</p>
+        <div class="form-group">
+          <label for="loginUser">Usuario</label>
+          <input type="text" id="loginUser" class="form-control" placeholder="Usuario admin" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label for="loginPass">Contraseña</label>
+          <div class="login-pass-wrap">
+            <input type="password" id="loginPass" class="form-control" placeholder="Contraseña" autocomplete="current-password" />
+            <button class="toggle-pass" id="togglePass" type="button" aria-label="Mostrar contraseña">👁</button>
+          </div>
+        </div>
+        <div class="login-error" id="loginError" style="display:none">
+          ⚠️ Usuario o contraseña incorrectos
+        </div>
+        <button class="btn btn-primary btn-login" id="btnLoginAdmin">
+          Ingresar como Admin →
+        </button>
+      </div>
+
+      <div class="login-footer">DPA © 2026 — Sistema de Gestión de Pádel</div>
+    </div>
+  </div>
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-icon">🎾</div>
+        <div class="brand-text">
+          <span class="brand-name">DPA</span>
+          <span class="brand-sub">Pádel Manager</span>
+        </div>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Cerrar menú">✕</button>
+    </div>
+
+    <!-- Active Teacher Badge -->
+    <div class="active-teacher-bar" id="activeTeacherBar">
+      <div class="at-icon">👤</div>
+      <div class="at-info">
+        <span class="at-label">Profesor activo</span>
+        <span class="at-name" id="activeTeacherName">Ninguno</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" id="nav-calendar" data-section="calendar">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">Calendario</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-classes" data-section="classes">
+        <span class="nav-icon">📝</span>
+        <span class="nav-label">Clases</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-students" data-section="students">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">Alumnos</span>
+      </a>
+      <a href="#" class="nav-item admin-only" id="nav-teachers" data-section="teachers">
+        <span class="nav-icon">🏫</span>
+        <span class="nav-label">Profesores</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-stats" data-section="stats">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Estadísticas</span>
+      </a>
+      <a href="#" class="nav-item admin-only" id="nav-settings" data-section="settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Configuración</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="cloud-status-bar status-offline" id="cloudStatus">
+        <span class="cloud-dot">⚪</span><span class="cloud-text">Sin configurar</span>
+      </div>
+      <div class="session-info" id="sessionInfo">
+        <div class="session-avatar" id="sessionAvatar">?</div>
+        <div class="session-details">
+          <span class="session-name" id="sessionName">—</span>
+          <span class="session-role" id="sessionRole">—</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout" title="Cerrar sesión">🚪 Salir</button>
+      <span class="version">v1.0.0</span>
+    </div>
+  </aside>
+
+  <!-- Overlay for mobile sidebar -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ============ MAIN WRAPPER ============ -->
+  <div class="main-wrapper" id="mainWrapper">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="topbar-center" id="topbarTitle">
+        <h1 class="page-title">Calendario</h1>
+      </div>
+      <div class="topbar-right">
+        <span class="current-date-display" id="currentDateDisplay"></span>
+      </div>
+    </header>
+
+    <!-- ============ SECTION: CALENDAR ============ -->
+    <section class="content-section active" id="section-calendar">
+
+      <!-- Monthly Calendar View -->
+      <div id="view-monthly" class="view-active">
+        <div class="calendar-controls">
+          <button class="btn btn-icon" id="calPrev" aria-label="Mes anterior">‹</button>
+          <h2 class="calendar-month-title" id="calMonthTitle">agosto 2026</h2>
+          <button class="btn btn-icon" id="calNext" aria-label="Mes siguiente">›</button>
+          <button class="btn btn-primary btn-sm" id="calToday">Hoy</button>
+        </div>
+
+        <div class="calendar-legend">
+          <span class="legend-item"><span class="legend-dot dot-completed"></span>Completadas</span>
+          <span class="legend-item"><span class="legend-dot dot-cancelled"></span>Canceladas</span>
+          <span class="legend-item"><span class="legend-dot dot-pending"></span>Pendientes</span>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid">
+          <!-- Days rendered by JS -->
+        </div>
+
+        <!-- Monthly Summary -->
+        <div class="month-summary" id="monthSummary">
+          <div class="summary-card">
+            <span class="sc-value" id="msTotalClases">0</span>
+            <span class="sc-label">Clases totales</span>
+          </div>
+          <div class="summary-card">
+            <span class="sc-value green" id="msCompletadas">0</span>
+            <span class="sc-label">Completadas</span>
+          </div>
+          <div class="summary-card">
+            <span class="sc-value red" id="msCanceladas">0</span>
+            <span class="sc-label">Canceladas</span>
+          </div>
+          <div class="summary-card">
+            <span class="sc-value accent" id="msTotalIngresos">$0</span>
+            <span class="sc-label">Ingresos</span>
+          </div>
+          <div class="summary-card">
+            <span class="sc-value" id="msTotalProf">$0</span>
+            <span class="sc-label">Ganancia Prof.</span>
+          </div>
+          <div class="summary-card">
+            <span class="sc-value" id="msTotalClub">$0</span>
+            <span class="sc-label">Ganancia Club</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily View -->
+      <div id="view-daily" class="view-hidden">
+        <div class="daily-header">
+          <button class="btn btn-icon" id="backToMonth" aria-label="Volver al mes">← Volver</button>
+          <h2 class="daily-title" id="dailyTitle">lunes 1 de agosto</h2>
+          <button class="btn btn-primary" id="addClassBtn">
+            <span>+</span> Nueva Clase
+          </button>
+        </div>
+
+        <!-- Day summary bar -->
+        <div class="day-summary-bar" id="daySummaryBar">
+          <div class="dsb-item"><span class="dsb-val" id="dsbTotal">0</span><span class="dsb-label">Clases</span></div>
+          <div class="dsb-item"><span class="dsb-val green" id="dsbCompleted">0</span><span class="dsb-label">Completadas</span></div>
+          <div class="dsb-item"><span class="dsb-val red" id="dsbCancelled">0</span><span class="dsb-label">Canceladas</span></div>
+          <div class="dsb-item"><span class="dsb-val accent" id="dsbIngresos">$0</span><span class="dsb-label">Ingresos</span></div>
+          <div class="dsb-item"><span class="dsb-val" id="dsbProf">$0</span><span class="dsb-label">Profesor</span></div>
+          <div class="dsb-item"><span class="dsb-val" id="dsbClub">$0</span><span class="dsb-label">Club</span></div>
+        </div>
+
+        <!-- Classes table for selected day -->
+        <div class="table-wrapper" id="classTableWrapper">
+          <table class="classes-table" id="classesTable">
+            <thead>
+              <tr>
+                <th class="col-num">N°</th>
+                <th class="col-fecha">Fecha</th>
+                <th class="col-hora">Hora</th>
+                <th class="col-personas">Pers.</th>
+                <th class="col-alumnos">Alumno/s</th>
+                <th class="col-tipo">Tipo</th>
+                <th class="col-valor">Valor Total</th>
+                <th class="col-prof">Prof. (50%)</th>
+                <th class="col-club">Club (50%)</th>
+                <th class="col-factura">N° Factura</th>
+                <th class="col-pago">Forma de Pago</th>
+                <th class="col-estado">Estado</th>
+                <th class="col-acciones">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="classesTableBody">
+              <!-- Rows rendered by JS -->
+            </tbody>
+            <tfoot>
+              <tr class="totals-row">
+                <td colspan="6" class="totals-label">TOTALES DEL DÍA:</td>
+                <td class="totals-val" id="totValor">$0</td>
+                <td class="totals-val" id="totProf">$0</td>
+                <td class="totals-val" id="totClub">$0</td>
+                <td colspan="4">
+                  <span class="badge badge-green" id="totCompleted">✓ 0 completadas</span>
+                  <span class="badge badge-red" id="totCancelled">✗ 0 canceladas</span>
+                  <span class="badge badge-gray" id="totPending">⏳ 0 pendientes</span>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+          <div class="empty-state" id="emptyClasses">
+            <div class="empty-icon">📋</div>
+            <p>No hay clases registradas para este día</p>
+            <button class="btn btn-primary" id="addClassBtnEmpty">+ Agregar primera clase</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SECTION: CLASSES (Monthly view of all classes) ============ -->
+    <section class="content-section" id="section-classes">
+      <div class="section-header">
+        <h2>Registro de Clases</h2>
+        <div class="section-header-actions">
+          <div class="month-selector">
+            <button class="btn btn-icon" id="classesMonthPrev">‹</button>
+            <span id="classesMonthLabel">agosto 2026</span>
+            <button class="btn btn-icon" id="classesMonthNext">›</button>
+          </div>
+          <button class="btn btn-primary" id="addClassBtnSection">+ Nueva Clase</button>
+        </div>
+      </div>
+
+      <div class="section-summary-bar">
+        <div class="dsb-item"><span class="dsb-val" id="secTotalClases">0</span><span class="dsb-label">Clases del mes</span></div>
+        <div class="dsb-item"><span class="dsb-val green" id="secCompletadas">0</span><span class="dsb-label">Completadas</span></div>
+        <div class="dsb-item"><span class="dsb-val red" id="secCanceladas">0</span><span class="dsb-label">Canceladas</span></div>
+        <div class="dsb-item"><span class="dsb-val accent" id="secIngresos">$0</span><span class="dsb-label">Ingresos</span></div>
+        <div class="dsb-item"><span class="dsb-val" id="secProf">$0</span><span class="dsb-label">Profesor</span></div>
+        <div class="dsb-item"><span class="dsb-val" id="secClub">$0</span><span class="dsb-label">Club</span></div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="classes-table" id="classesTableSection">
+          <thead>
+            <tr>
+              <th class="col-num">N°</th>
+              <th class="col-fecha">Fecha</th>
+              <th class="col-hora">Hora</th>
+              <th class="col-personas">Pers.</th>
+              <th class="col-alumnos">Alumno/s</th>
+              <th class="col-tipo">Tipo</th>
+              <th class="col-valor">Valor Total</th>
+              <th class="col-prof">Prof.</th>
+              <th class="col-club">Club</th>
+              <th class="col-factura">N° Factura</th>
+              <th class="col-pago">Forma de Pago</th>
+              <th class="col-estado">Estado</th>
+              <th class="col-acciones">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="classesTableSectionBody">
+          </tbody>
+          <tfoot>
+            <tr class="totals-row">
+              <td colspan="6" class="totals-label">TOTALES DEL MES:</td>
+              <td class="totals-val" id="secTotValor">$0</td>
+              <td class="totals-val" id="secTotProf">$0</td>
+              <td class="totals-val" id="secTotClub">$0</td>
+              <td colspan="4">
+                <span class="badge badge-green" id="secTotCompleted">✓ 0</span>
+                <span class="badge badge-red" id="secTotCancelled">✗ 0</span>
+                <span class="badge badge-gray" id="secTotPending">⏳ 0</span>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="empty-state" id="emptyClassesSection">
+          <div class="empty-icon">📋</div>
+          <p>No hay clases registradas este mes</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SECTION: STUDENTS ============ -->
+    <section class="content-section" id="section-students">
+      <div class="section-header">
+        <h2>Base de Alumnos</h2>
+        <div class="section-header-actions">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="studentSearchInput" placeholder="Buscar por nombre o apellido..." class="search-input" />
+          </div>
+          <button class="btn btn-primary" id="addStudentBtn">+ Nuevo Alumno</button>
+        </div>
+      </div>
+
+      <!-- Student list -->
+      <div class="student-grid" id="studentGrid">
+        <!-- Cards rendered by JS -->
+      </div>
+      <div class="empty-state" id="emptyStudents">
+        <div class="empty-icon">👥</div>
+        <p>No hay alumnos registrados todavía</p>
+        <button class="btn btn-primary" id="addStudentBtnEmpty">+ Agregar primer alumno</button>
+      </div>
+    </section>
+
+    <!-- ============ SECTION: TEACHERS ============ -->
+    <section class="content-section" id="section-teachers">
+      <div class="section-header">
+        <h2>Profesores</h2>
+        <button class="btn btn-primary" id="addTeacherBtn">+ Nuevo Profesor</button>
+      </div>
+      <div class="teacher-grid" id="teacherGrid">
+        <!-- Cards rendered by JS -->
+      </div>
+      <div class="empty-state" id="emptyTeachers">
+        <div class="empty-icon">🏫</div>
+        <p>No hay profesores registrados</p>
+        <button class="btn btn-primary" id="addTeacherBtnEmpty">+ Agregar primer profesor</button>
+      </div>
+    </section>
+
+    <!-- ============ SECTION: STATS ============ -->
+    <section class="content-section" id="section-stats">
+      <div class="section-header">
+        <h2>Estadísticas</h2>
+        <div class="month-selector">
+          <button class="btn btn-icon" id="statsMonthPrev">‹</button>
+          <span id="statsMonthLabel">agosto 2026</span>
+          <button class="btn btn-icon" id="statsMonthNext">›</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <!-- Summary cards -->
+        <div class="stats-section">
+          <h3>Resumen del Mes</h3>
+          <div class="stats-cards" id="statsCards">
+          </div>
+        </div>
+
+        <!-- By type -->
+        <div class="stats-section">
+          <h3>Por Tipo de Clase</h3>
+          <div class="type-bars" id="typeBars">
+          </div>
+        </div>
+
+        <!-- Top students -->
+        <div class="stats-section full-width">
+          <h3>Ranking de Alumnos (mes)</h3>
+          <div class="ranking-list" id="rankingList">
+          </div>
+        </div>
+
+        <!-- Gender distribution -->
+        <div class="stats-section full-width" id="genderStatsSection">
+          <h3>Distribución por Género (alumnos del mes)</h3>
+          <div id="genderStatsContent">
+            <p style="color:var(--text-muted); font-size:13px;">Sin datos de género registrados.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SECTION: SETTINGS ============ -->
+    <section class="content-section" id="section-settings">
+      <div class="section-header">
+        <h2>Configuración</h2>
+      </div>
+
+      <div class="settings-grid">
+        <!-- Prices -->
+        <div class="settings-card">
+          <h3>💰 Precios por Modalidad</h3>
+          <p class="settings-desc">Configure el valor de cada tipo de clase. El sistema calculará automáticamente la ganancia del profesor y del club.</p>
+
+          <div class="form-group">
+            <label for="priceIndividual">Clase Individual (precio total)</label>
+            <div class="input-prefix">
+              <span class="prefix">$</span>
+              <input type="number" id="priceIndividual" class="form-control" value="0" min="0" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Clase Grupal (por cantidad de personas)</label>
+            <div class="grupal-prices" id="grupalPrices">
+              <!-- rendered by JS -->
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="priceAcademia">Academia (precio por persona)</label>
+            <div class="input-prefix">
+              <span class="prefix">$</span>
+              <input type="number" id="priceAcademia" class="form-control" value="0" min="0" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Percentages -->
+        <div class="settings-card">
+          <h3>📊 División de Ingresos</h3>
+          <p class="settings-desc">Porcentaje de ganancia del profesor sobre el total de la clase.</p>
+
+          <div class="form-group">
+            <label for="profPercentage">Porcentaje del Profesor (%)</label>
+            <input type="number" id="profPercentage" class="form-control" value="50" min="0" max="100" />
+          </div>
+
+          <div class="percentage-preview" id="percentagePreview">
+            <div class="pct-bar">
+              <div class="pct-prof" id="pctProfBar" style="width:50%">Profesor 50%</div>
+              <div class="pct-club" id="pctClubBar" style="width:50%">Club 50%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Time slots -->
+        <div class="settings-card">
+          <h3>🕐 Configuración de Horarios</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="timeStart">Hora de inicio</label>
+              <select id="timeStart" class="form-control">
+                <option value="6">6:00 AM</option>
+                <option value="7" selected>7:00 AM</option>
+                <option value="8">8:00 AM</option>
+                <option value="9">9:00 AM</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="timeEnd">Hora de cierre</label>
+              <select id="timeEnd" class="form-control">
+                <option value="20">8:00 PM</option>
+                <option value="21">9:00 PM</option>
+                <option value="22" selected>10:00 PM</option>
+                <option value="23">11:00 PM</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="timeInterval">Intervalo</label>
+              <select id="timeInterval" class="form-control">
+                <option value="30" selected>30 minutos</option>
+                <option value="60">1 hora</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cloud Sync Card -->
+        <div class="settings-card">
+          <h3>☁️ Sincronización Nube (Firebase)</h3>
+          <p class="settings-desc">Sincronice sus datos locales con la base de datos Firebase Firestore en tiempo real.</p>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:12px;">
+            <button class="btn btn-secondary" id="btnPushAllCloud">☁️ Subir todo a la Nube</button>
+            <button class="btn btn-ghost" id="btnPullAllCloud">🔄 Descargar desde la Nube</button>
+          </div>
+        </div>
+
+        <!-- Save button -->
+        <div class="settings-card settings-actions">
+          <button class="btn btn-primary btn-lg" id="saveSettingsBtn">💾 Guardar Configuración</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- end .main-wrapper -->
+
+  <!-- ============ MODAL: CLASS FORM ============ -->
+  <div class="modal-overlay" id="classFormOverlay">
+    <div class="modal modal-large" id="classFormModal">
+      <div class="modal-header">
+        <h3 id="classFormTitle">Nueva Clase</h3>
+        <button class="modal-close" id="classFormClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="classFormId" />
+        <input type="hidden" id="classFormDate" />
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="classDate">Fecha</label>
+            <input type="date" id="classDate" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label for="classHour">Hora <span class="required">*</span></label>
+            <select id="classHour" class="form-control">
+              <!-- Options generated by JS -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="classPersonas">Personas <span class="required">*</span></label>
+            <select id="classPersonas" class="form-control">
+              <option value="">Cantidad</option>
+              <option value="1">1 persona</option>
+              <option value="2">2 personas</option>
+              <option value="3">3 personas</option>
+              <option value="4">4 personas</option>
+              <option value="5">5 personas</option>
+              <option value="6">6 personas</option>
+              <option value="7">7 personas</option>
+              <option value="8">8 personas</option>
+              <option value="9">9 personas</option>
+              <option value="10">10 personas</option>
+              <option value="11">11 personas</option>
+              <option value="12">12 personas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Alumno/s <span class="required">*</span></label>
+          <div class="student-autocomplete" id="studentAutocomplete">
+            <div class="selected-students" id="selectedStudents">
+              <!-- Tags appear here -->
+            </div>
+            <input
+              type="text"
+              id="studentSearchClass"
+              class="form-control"
+              placeholder="Escriba nombre o apellido para buscar..."
+              autocomplete="off"
+            />
+            <div class="autocomplete-dropdown" id="autocompleteDropdown">
+              <!-- Suggestions rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="classTipo">Tipo de Clase <span class="required">*</span></label>
+            <select id="classTipo" class="form-control">
+              <option value="">Seleccionar...</option>
+              <option value="individual">Clase Individual</option>
+              <option value="grupal">Clase Grupal</option>
+              <option value="academia">Academia</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="classPago">Forma de Pago</label>
+            <select id="classPago" class="form-control">
+              <option value="">Seleccionar...</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="tarjeta">Tarjeta</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="classFactura">N° de Factura</label>
+            <input type="text" id="classFactura" class="form-control" placeholder="Ej: F-00123" />
+          </div>
+        </div>
+
+        <!-- Value preview -->
+        <div class="value-preview" id="valuePreview">
+          <div class="vp-card">
+            <span class="vp-label">Valor Total</span>
+            <span class="vp-val accent" id="vpTotal">$0</span>
+          </div>
+          <div class="vp-card">
+            <span class="vp-label">Ganancia Profesor</span>
+            <span class="vp-val green" id="vpProf">$0</span>
+          </div>
+          <div class="vp-card">
+            <span class="vp-label">Ganancia Club</span>
+            <span class="vp-val" id="vpClub">$0</span>
+          </div>
+        </div>
+
+        <!-- Manual override for value -->
+        <div class="form-group">
+          <label for="classValorManual">Valor personalizado (opcional — sobreescribe el automático)</label>
+          <div class="input-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="classValorManual" class="form-control" placeholder="Dejar vacío para usar precio configurado" min="0" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="classFormCancel">Cancelar</button>
+        <button class="btn btn-primary" id="classFormSave">💾 Guardar Clase</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: STUDENT FORM ============ -->
+  <div class="modal-overlay" id="studentFormOverlay">
+    <div class="modal" id="studentFormModal">
+      <div class="modal-header">
+        <h3 id="studentFormTitle">Nuevo Alumno</h3>
+        <button class="modal-close" id="studentFormClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="studentFormId" />
+        <div class="form-row">
+          <div class="form-group">
+            <label for="studentName">Nombre <span class="required">*</span></label>
+            <input type="text" id="studentName" class="form-control" placeholder="Nombre" />
+          </div>
+          <div class="form-group">
+            <label for="studentLastName">Apellido <span class="required">*</span></label>
+            <input type="text" id="studentLastName" class="form-control" placeholder="Apellido" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="studentPhone">Teléfono</label>
+            <input type="tel" id="studentPhone" class="form-control" placeholder="+54 11 1234-5678" />
+          </div>
+          <div class="form-group">
+            <label for="studentEmail">Email</label>
+            <input type="email" id="studentEmail" class="form-control" placeholder="email@ejemplo.com" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Género</label>
+          <div class="gender-selector" id="genderSelector">
+            <button type="button" class="gender-btn" data-gender="masculino" id="genderMasc">
+              <span class="gender-icon">♂</span> Masculino
+            </button>
+            <button type="button" class="gender-btn" data-gender="femenino" id="genderFem">
+              <span class="gender-icon">♀</span> Femenino
+            </button>
+            <button type="button" class="gender-btn active" data-gender="" id="genderNone">
+              — No especificado
+            </button>
+          </div>
+          <input type="hidden" id="studentGender" value="" />
+        </div>
+        <div class="form-group">
+          <label for="studentNotes">Notas</label>
+          <textarea id="studentNotes" class="form-control" rows="3" placeholder="Observaciones, nivel de juego, etc."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="studentFormCancel">Cancelar</button>
+        <button class="btn btn-primary" id="studentFormSave">💾 Guardar Alumno</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: STUDENT DETAIL ============ -->
+  <div class="modal-overlay" id="studentDetailOverlay">
+    <div class="modal modal-large" id="studentDetailModal">
+      <div class="modal-header">
+        <h3 id="studentDetailName">Perfil del Alumno</h3>
+        <button class="modal-close" id="studentDetailClose">✕</button>
+      </div>
+      <div class="modal-body" id="studentDetailBody">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: TEACHER FORM ============ -->
+  <div class="modal-overlay" id="teacherFormOverlay">
+    <div class="modal" id="teacherFormModal">
+      <div class="modal-header">
+        <h3 id="teacherFormTitle">Nuevo Profesor</h3>
+        <button class="modal-close" id="teacherFormClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="teacherFormId" />
+        <div class="form-row">
+          <div class="form-group">
+            <label for="teacherName">Nombre <span class="required">*</span></label>
+            <input type="text" id="teacherName" class="form-control" placeholder="Nombre" />
+          </div>
+          <div class="form-group">
+            <label for="teacherLastName">Apellido <span class="required">*</span></label>
+            <input type="text" id="teacherLastName" class="form-control" placeholder="Apellido" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="teacherPhone">Teléfono</label>
+            <input type="tel" id="teacherPhone" class="form-control" placeholder="+54 11 1234-5678" />
+          </div>
+          <div class="form-group">
+            <label for="teacherEmail">Email</label>
+            <input type="email" id="teacherEmail" class="form-control" placeholder="email@ejemplo.com" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="teacherPercentage">Porcentaje de ganancia (%)</label>
+          <input type="number" id="teacherPercentage" class="form-control" value="50" min="0" max="100" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="teacherFormCancel">Cancelar</button>
+        <button class="btn btn-primary" id="teacherFormSave">💾 Guardar Profesor</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONFIRM DIALOG ============ -->
+  <div class="modal-overlay" id="confirmOverlay">
+    <div class="modal modal-small" id="confirmModal">
+      <div class="modal-header">
+        <h3 id="confirmTitle">Confirmar acción</h3>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage">¿Está seguro?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="confirmCancel">Cancelar</button>
+        <button class="btn btn-danger" id="confirmOk">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TOAST NOTIFICATIONS ============ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ============ SCRIPTS ============ -->
+  <!-- Firebase SDK (Compat CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- App Modules -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/cloud-sync.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/teachers.js"></script>
+  <script src="js/students.js"></script>
+  <script src="js/classes.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
