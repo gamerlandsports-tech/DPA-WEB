@@ -124,13 +124,46 @@ const App = {
      ACTIVE TEACHER BAR
      ================================================================ */
   updateActiveTeacherBar() {
+    const select = document.getElementById('activeTeacherSelect');
+    if (!select) return;
+    const teachers = Storage.getTeachers();
     const activeId = Storage.getActiveTeacher();
-    const nameEl   = document.getElementById('activeTeacherName');
-    if (activeId) {
-      const t = Storage.getTeacher(activeId);
-      nameEl.textContent = t ? Utils.fullName(t.name, t.lastName) : 'Ninguno';
-    } else {
-      nameEl.textContent = 'Ninguno';
+
+    select.innerHTML = '';
+    if (teachers.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = '— Sin profesores —';
+      select.appendChild(opt);
+      return;
+    }
+
+    teachers.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = Utils.fullName(t.name, t.lastName);
+      if (t.id === activeId) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    if (!activeId && teachers.length > 0) {
+      Storage.setActiveTeacher(teachers[0].id);
+      select.value = teachers[0].id;
+    }
+
+    if (!select._hasChangeListener) {
+      select._hasChangeListener = true;
+      select.addEventListener('change', (e) => {
+        const teacherId = e.target.value;
+        if (teacherId) {
+          Storage.setActiveTeacher(teacherId);
+          App.showToast(`Profesor activo cambiado a ${e.target.options[e.target.selectedIndex].text}`, 'info');
+          if (App._currentSection === 'calendar') Calendar.renderMonth();
+          if (App._currentSection === 'classes') Classes.renderMonthTable(App._sectionClassesYear, App._sectionClassesMonth);
+          if (App._currentSection === 'teachers') Teachers.render();
+          if (App._currentSection === 'stats') Stats.render(Stats._year, Stats._month);
+        }
+      });
     }
   },
 
@@ -232,6 +265,39 @@ const App = {
         } else {
           this.showToast('Firebase no está configurado aún', 'error');
         }
+      });
+    }
+
+    // Change password button
+    const btnPass = document.getElementById('btnUpdatePassword');
+    if (btnPass) {
+      btnPass.addEventListener('click', () => {
+        const newPass = (document.getElementById('newPassInput').value || '').trim();
+        const confirmPass = (document.getElementById('confirmPassInput').value || '').trim();
+
+        if (!newPass) {
+          this.showToast('Ingrese la nueva contraseña', 'error');
+          return;
+        }
+        if (newPass !== confirmPass) {
+          this.showToast('Las contraseñas no coinciden', 'error');
+          return;
+        }
+
+        if (Auth.isAdmin()) {
+          const settings = Storage.getSettings();
+          settings.adminPass = newPass;
+          Storage.saveSettings(settings);
+          this.showToast('🔑 Contraseña de Administrador actualizada', 'success');
+        } else if (Auth.isProfessor()) {
+          const profId = Auth.getCurrentProfessorId();
+          if (profId) {
+            Storage.updateTeacher(profId, { password: newPass });
+            this.showToast('🔑 Tu contraseña de Profesor fue actualizada', 'success');
+          }
+        }
+        document.getElementById('newPassInput').value = '';
+        document.getElementById('confirmPassInput').value = '';
       });
     }
   },

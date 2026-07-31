@@ -80,6 +80,7 @@ const Teachers = {
     document.getElementById('teacherPhone').value      = '';
     document.getElementById('teacherEmail').value      = '';
     document.getElementById('teacherPercentage').value = 50;
+    document.getElementById('teacherPassword').value   = '';
 
     if (teacherId) {
       const t = Storage.getTeacher(teacherId);
@@ -91,6 +92,7 @@ const Teachers = {
       document.getElementById('teacherPhone').value      = t.phone;
       document.getElementById('teacherEmail').value      = t.email;
       document.getElementById('teacherPercentage').value = t.percentage;
+      document.getElementById('teacherPassword').value   = t.password || '';
     } else {
       title.textContent = 'Nuevo Profesor';
       idField.value = '';
@@ -107,6 +109,7 @@ const Teachers = {
     const phone      = document.getElementById('teacherPhone').value.trim();
     const email      = document.getElementById('teacherEmail').value.trim();
     const percentage = parseFloat(document.getElementById('teacherPercentage').value) || 50;
+    const password   = document.getElementById('teacherPassword').value.trim();
     const id         = document.getElementById('teacherFormId').value;
 
     if (!name || !lastName) {
@@ -114,7 +117,7 @@ const Teachers = {
       return;
     }
 
-    const data = { name, lastName, phone, email, percentage };
+    const data = { name, lastName, phone, email, percentage, password };
 
     if (id) {
       Storage.updateTeacher(id, data);

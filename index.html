@@ -101,12 +101,14 @@
       <button class="sidebar-toggle" id="sidebarToggle" aria-label="Cerrar menú">✕</button>
     </div>
 
-    <!-- Active Teacher Badge -->
+    <!-- Active Teacher Selector Dropdown -->
     <div class="active-teacher-bar" id="activeTeacherBar">
       <div class="at-icon">👤</div>
-      <div class="at-info">
+      <div class="at-info" style="width: 100%;">
         <span class="at-label">Profesor activo</span>
-        <span class="at-name" id="activeTeacherName">Ninguno</span>
+        <select id="activeTeacherSelect" class="form-control" style="padding: 4px 6px; font-size: 11.5px; font-weight: 700; background: var(--bg-card); color: var(--accent); border: 1px solid rgba(34,197,94,0.35); margin-top: 2px; width: 100%; border-radius: 6px; cursor: pointer;">
+          <option value="">— Cargar Profesor —</option>
+        </select>
       </div>
     </div>
 
@@ -533,6 +535,23 @@
           </div>
         </div>
 
+        <!-- Change Password Card -->
+        <div class="settings-card">
+          <h3>🔒 Cambiar Mi Contraseña</h3>
+          <p class="settings-desc">Defina su nueva contraseña de acceso personal para ingresar al sistema.</p>
+          <div class="form-row" style="margin-top: 12px;">
+            <div class="form-group">
+              <label for="newPassInput">Nueva Contraseña</label>
+              <input type="password" id="newPassInput" class="form-control" placeholder="Escriba su nueva contraseña" />
+            </div>
+            <div class="form-group">
+              <label for="confirmPassInput">Confirmar Contraseña</label>
+              <input type="password" id="confirmPassInput" class="form-control" placeholder="Repita la contraseña" />
+            </div>
+          </div>
+          <button class="btn btn-secondary" id="btnUpdatePassword" style="margin-top: 8px;">🔑 Actualizar Contraseña</button>
+        </div>
+
         <!-- Save button -->
         <div class="settings-card settings-actions">
           <button class="btn btn-primary btn-lg" id="saveSettingsBtn">💾 Guardar Configuración</button>
@@ -761,6 +780,11 @@
         <div class="form-group">
           <label for="teacherPercentage">Porcentaje de ganancia (%)</label>
           <input type="number" id="teacherPercentage" class="form-control" value="50" min="0" max="100" />
+        </div>
+        <div class="form-group">
+          <label for="teacherPassword">Contraseña de acceso personal</label>
+          <input type="password" id="teacherPassword" class="form-control" placeholder="Dejar vacío para usar 'lokititopata'" />
+          <small style="color:var(--text-muted); font-size:11.5px; display:block; margin-top:4px">Defina la contraseña única con la que este profesor ingresará a su cuenta.</small>
         </div>
       </div>
       <div class="modal-footer">
