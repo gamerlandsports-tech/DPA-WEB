@@ -62,7 +62,7 @@
         <div class="login-error" id="loginError" style="display:none">
           ⚠️ Credenciales incorrectas. Verifique usuario y contraseña.
         </div>
-        <button class="btn btn-primary btn-login" id="btnLoginAdmin">
+        <button class="btn btn-primary btn-login" id="btnLoginAdmin" type="button" onclick="Auth._handleAdminLogin()">
           Ingresar como Admin →
         </button>
       </div>
@@ -79,7 +79,7 @@
         <div class="login-no-profs" id="loginNoProfs" style="display:none">
           <p>No hay profesores registrados.<br>Ingresá en la pestaña <strong>Administrador</strong> (Usuario: <code>DPA</code>, Pass: <code>lokititopata</code>) para agregar el primer profesor.</p>
         </div>
-        <button class="btn btn-primary btn-login" id="btnLoginProf">
+        <button class="btn btn-primary btn-login" id="btnLoginProf" type="button" onclick="Auth._handleProfLogin()">
           Ingresar como Profesor →
         </button>
       </div>

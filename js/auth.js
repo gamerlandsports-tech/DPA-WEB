@@ -18,34 +18,42 @@ const Auth = {
      ================================================================ */
   getSession() {
     try {
-      return JSON.parse(sessionStorage.getItem(this.SESSION_KEY));
+      return JSON.parse(sessionStorage.getItem(Auth.SESSION_KEY));
     } catch { return null; }
   },
 
   setSession(session) {
-    sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+    try {
+      sessionStorage.setItem(Auth.SESSION_KEY, JSON.stringify(session));
+    } catch (e) {
+      console.error('Error saving session:', e);
+    }
   },
 
   clearSession() {
-    sessionStorage.removeItem(this.SESSION_KEY);
+    try {
+      sessionStorage.removeItem(Auth.SESSION_KEY);
+    } catch (e) {
+      console.error('Error clearing session:', e);
+    }
   },
 
   isLoggedIn() {
-    return this.getSession() !== null;
+    return Auth.getSession() !== null;
   },
 
   isAdmin() {
-    const s = this.getSession();
+    const s = Auth.getSession();
     return s && s.type === 'admin';
   },
 
   isProfessor() {
-    const s = this.getSession();
+    const s = Auth.getSession();
     return s && s.type === 'professor';
   },
 
   getCurrentProfessorId() {
-    const s = this.getSession();
+    const s = Auth.getSession();
     return (s && s.type === 'professor') ? s.professorId : null;
   },
 
@@ -54,92 +62,99 @@ const Auth = {
      Matches username (DPA / teacher name), email, or phone number
      ================================================================ */
   authenticate(userOrContact, pass) {
-    const input = (userOrContact || '').trim().toLowerCase();
-    const cleanInputPhone = input.replace(/\D/g, '');
-    const password = (pass || '').trim();
+    try {
+      const input = (userOrContact || '').trim().toLowerCase();
+      const cleanInputPhone = input.replace(/\D/g, '');
+      const password = (pass || '').trim();
 
-    if (!input) return { success: false, reason: 'empty_user' };
-    if (!password) return { success: false, reason: 'empty_pass' };
+      if (!input) return { success: false, reason: 'empty_user' };
+      if (!password) return { success: false, reason: 'empty_pass' };
 
-    const settings = Storage.getSettings();
+      const settings = (typeof Storage !== 'undefined' && Storage.getSettings) ? Storage.getSettings() : {};
 
-    // 1. Check Admin Credentials
-    const adminUsers  = [this.ADMIN_USER.toLowerCase(), 'admin', (settings.adminUser || '').toLowerCase()].filter(Boolean);
-    const adminEmail  = (settings.adminEmail || '').toLowerCase();
-    const adminPhone  = (settings.adminPhone || '').replace(/\D/g, '');
-    const adminPass   = settings.adminPass || this.ADMIN_PASS;
+      // 1. Check Admin Credentials
+      const adminUsers  = [Auth.ADMIN_USER.toLowerCase(), 'admin', (settings.adminUser || '').toLowerCase()].filter(Boolean);
+      const adminEmail  = (settings.adminEmail || '').toLowerCase();
+      const adminPhone  = (settings.adminPhone || '').replace(/\D/g, '');
+      const adminPass   = settings.adminPass || Auth.ADMIN_PASS;
 
-    const isAdminUser  = adminUsers.includes(input);
-    const isAdminEmail = adminEmail && input === adminEmail;
-    const isAdminPhone = cleanInputPhone && adminPhone && cleanInputPhone === adminPhone;
+      const isAdminUser  = adminUsers.includes(input);
+      const isAdminEmail = adminEmail && input === adminEmail;
+      const isAdminPhone = cleanInputPhone && adminPhone && cleanInputPhone === adminPhone;
 
-    const passLower = password.toLowerCase();
-    const adminPassLower = adminPass.toLowerCase();
+      const passLower = password.toLowerCase();
+      const adminPassLower = adminPass.toLowerCase();
 
-    if ((isAdminUser || isAdminEmail || isAdminPhone) && (password === adminPass || passLower === adminPassLower)) {
-      this.setSession({ type: 'admin', professorId: null });
-      return { success: true, type: 'admin' };
-    }
-
-    // 2. Check Teacher Credentials (matches username/name, email, or phone)
-    const teachers = Storage.getTeachers();
-    for (const t of teachers) {
-      const tName     = (t.name || '').toLowerCase();
-      const tLastName = (t.lastName || '').toLowerCase();
-      const tFull     = Utils.fullName(t.name, t.lastName).toLowerCase();
-      const tRev      = Utils.fullName(t.lastName, t.name).toLowerCase();
-      const tEmail    = (t.email || '').toLowerCase();
-      const tPhone    = (t.phone || '').replace(/\D/g, '');
-      const tPass     = t.password || this.ADMIN_PASS;
-
-      const isNameMatch  = input === tName || input === tLastName || input === tFull || input === tRev;
-      const isEmailMatch = tEmail && input === tEmail;
-      const isPhoneMatch = cleanInputPhone && tPhone && cleanInputPhone === tPhone;
-
-      if ((isNameMatch || isEmailMatch || isPhoneMatch) && (password === tPass || password === this.ADMIN_PASS)) {
-        this.setSession({ type: 'professor', professorId: t.id });
-        Storage.setActiveTeacher(t.id);
-        return { success: true, type: 'professor', professorId: t.id };
+      if ((isAdminUser || isAdminEmail || isAdminPhone) && (password === adminPass || passLower === adminPassLower)) {
+        Auth.setSession({ type: 'admin', professorId: null });
+        return { success: true, type: 'admin' };
       }
-    }
 
-    return { success: false, reason: 'invalid_credentials' };
+      // 2. Check Teacher Credentials (matches username/name, email, or phone)
+      const teachers = (typeof Storage !== 'undefined' && Storage.getTeachers) ? Storage.getTeachers() : [];
+      for (const t of teachers) {
+        const tName     = (t.name || '').toLowerCase();
+        const tLastName = (t.lastName || '').toLowerCase();
+        const tFull     = (typeof Utils !== 'undefined' && Utils.fullName) ? Utils.fullName(t.name, t.lastName).toLowerCase() : `${tName} ${tLastName}`;
+        const tRev      = (typeof Utils !== 'undefined' && Utils.fullName) ? Utils.fullName(t.lastName, t.name).toLowerCase() : `${tLastName} ${tName}`;
+        const tEmail    = (t.email || '').toLowerCase();
+        const tPhone    = (t.phone || '').replace(/\D/g, '');
+        const tPass     = t.password || Auth.ADMIN_PASS;
+
+        const isNameMatch  = input === tName || input === tLastName || input === tFull || input === tRev;
+        const isEmailMatch = tEmail && input === tEmail;
+        const isPhoneMatch = cleanInputPhone && tPhone && cleanInputPhone === tPhone;
+
+        if ((isNameMatch || isEmailMatch || isPhoneMatch) && (password === tPass || password === Auth.ADMIN_PASS || passLower === Auth.ADMIN_PASS.toLowerCase())) {
+          Auth.setSession({ type: 'professor', professorId: t.id });
+          if (typeof Storage !== 'undefined') Storage.setActiveTeacher(t.id);
+          return { success: true, type: 'professor', professorId: t.id };
+        }
+      }
+
+      return { success: false, reason: 'invalid_credentials' };
+    } catch (e) {
+      console.error('Error in Auth.authenticate:', e);
+      return { success: false, reason: 'error', error: e };
+    }
   },
 
   loginAdmin(user, pass) {
-    const res = this.authenticate(user, pass);
+    const res = Auth.authenticate(user, pass);
     return res.success && res.type === 'admin';
   },
 
   loginProfessor(professorId, pass = null) {
-    const t = Storage.getTeacher(professorId);
+    const t = (typeof Storage !== 'undefined') ? Storage.getTeacher(professorId) : null;
     if (!t) return false;
     if (pass) {
-      const tPass = t.password || this.ADMIN_PASS;
-      if (pass !== tPass && pass !== this.ADMIN_PASS) return false;
+      const tPass = t.password || Auth.ADMIN_PASS;
+      if (pass !== tPass && pass !== Auth.ADMIN_PASS) return false;
     }
-    this.setSession({ type: 'professor', professorId });
-    Storage.setActiveTeacher(professorId);
+    Auth.setSession({ type: 'professor', professorId });
+    if (typeof Storage !== 'undefined') Storage.setActiveTeacher(professorId);
     return true;
   },
 
   logout() {
-    this.clearSession();
+    Auth.clearSession();
   },
 
   /* ================================================================
      UI — INIT LOGIN SCREEN
      ================================================================ */
   initLoginScreen() {
-    this._populateProfessors();
-    this._initTabs();
-    this._initButtons();
+    Auth._populateProfessors();
+    Auth._initTabs();
+    Auth._initButtons();
   },
 
   _populateProfessors() {
     const select   = document.getElementById('loginProfSelect');
     const noprofs  = document.getElementById('loginNoProfs');
-    const teachers = Storage.getTeachers();
+    if (!select || !noprofs) return;
+
+    const teachers = (typeof Storage !== 'undefined' && Storage.getTeachers) ? Storage.getTeachers() : [];
 
     select.innerHTML = '<option value="">— Seleccionar —</option>';
 
@@ -152,7 +167,7 @@ const Auth = {
       teachers.forEach(t => {
         const opt = document.createElement('option');
         opt.value = t.id;
-        opt.textContent = Utils.fullName(t.name, t.lastName);
+        opt.textContent = (typeof Utils !== 'undefined' && Utils.fullName) ? Utils.fullName(t.name, t.lastName) : `${t.name} ${t.lastName}`;
         select.appendChild(opt);
       });
     }
@@ -167,90 +182,156 @@ const Auth = {
         btn.classList.add('active');
         // Show correct panel
         document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById(`panel${Utils.capitalize(tab)}`).classList.add('active');
+        const panel = document.getElementById(`panel${(typeof Utils !== 'undefined' && Utils.capitalize) ? Utils.capitalize(tab) : tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+        if (panel) panel.classList.add('active');
         // Clear error
-        document.getElementById('loginError').style.display = 'none';
+        const err = document.getElementById('loginError');
+        if (err) err.style.display = 'none';
       });
     });
   },
 
   _initButtons() {
-    // Admin login button
-    document.getElementById('btnLoginAdmin').addEventListener('click', () => this._handleAdminLogin());
+    const btnAdmin = document.getElementById('btnLoginAdmin');
+    if (btnAdmin) {
+      btnAdmin.onclick = (e) => {
+        if (e) e.preventDefault();
+        Auth._handleAdminLogin();
+      };
+    }
 
-    // Professor login button
-    document.getElementById('btnLoginProf').addEventListener('click', () => this._handleProfLogin());
+    const btnProf = document.getElementById('btnLoginProf');
+    if (btnProf) {
+      btnProf.onclick = (e) => {
+        if (e) e.preventDefault();
+        Auth._handleProfLogin();
+      };
+    }
 
     // Enter key support
-    document.getElementById('loginPass').addEventListener('keydown', e => {
-      if (e.key === 'Enter') this._handleAdminLogin();
-    });
-    document.getElementById('loginUser').addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('loginPass').focus();
-    });
+    const passInput = document.getElementById('loginPass');
+    if (passInput) {
+      passInput.onkeydown = (e) => {
+        if (e.key === 'Enter') Auth._handleAdminLogin();
+      };
+    }
+
+    const userInput = document.getElementById('loginUser');
+    if (userInput) {
+      userInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          const passEl = document.getElementById('loginPass');
+          if (passEl) passEl.focus();
+        }
+      };
+    }
 
     // Password toggle
-    document.getElementById('togglePass').addEventListener('click', () => {
-      const input = document.getElementById('loginPass');
-      const btn   = document.getElementById('togglePass');
-      if (input.type === 'password') {
-        input.type = 'text';
-        btn.textContent = '🙈';
-      } else {
-        input.type = 'password';
-        btn.textContent = '👁';
-      }
-    });
+    const togglePass = document.getElementById('togglePass');
+    if (togglePass) {
+      togglePass.onclick = () => {
+        const input = document.getElementById('loginPass');
+        if (input) {
+          if (input.type === 'password') {
+            input.type = 'text';
+            togglePass.textContent = '🙈';
+          } else {
+            input.type = 'password';
+            togglePass.textContent = '👁';
+          }
+        }
+      };
+    }
 
     // Logout button
-    document.getElementById('btnLogout').addEventListener('click', () => this._handleLogout());
+    const btnLogout = document.getElementById('btnLogout');
+    if (btnLogout) {
+      btnLogout.onclick = () => Auth._handleLogout();
+    }
   },
 
   _handleAdminLogin() {
-    const user = document.getElementById('loginUser').value;
-    const pass = document.getElementById('loginPass').value;
-    const err  = document.getElementById('loginError');
+    try {
+      const userEl = document.getElementById('loginUser');
+      const passEl = document.getElementById('loginPass');
+      const errEl  = document.getElementById('loginError');
 
-    const authRes = this.authenticate(user, pass);
+      const user = userEl ? userEl.value : '';
+      const pass = passEl ? passEl.value : '';
 
-    if (authRes.success) {
-      err.style.display = 'none';
-      this._enterApp(authRes.type, authRes.professorId || null);
-    } else {
-      err.style.display = 'block';
-      err.textContent = authRes.reason === 'empty_user' ? '⚠️ Ingrese su usuario, correo o teléfono'
-                      : authRes.reason === 'empty_pass' ? '⚠️ Ingrese su contraseña'
-                      : '⚠️ Credenciales incorrectas (usuario/email/teléfono o contraseña)';
-      document.getElementById('loginPass').value = '';
-      document.getElementById('loginPass').focus();
-      // Shake animation
-      const card = document.getElementById('loginCard');
-      card.style.animation = 'none';
-      card.offsetHeight; // reflow
-      card.style.animation = 'shake 0.4s ease';
+      const authRes = Auth.authenticate(user, pass);
+
+      if (authRes.success) {
+        if (errEl) errEl.style.display = 'none';
+        Auth._enterApp(authRes.type, authRes.professorId || null);
+      } else {
+        if (errEl) {
+          errEl.style.display = 'block';
+          errEl.textContent = authRes.reason === 'empty_user' ? '⚠️ Ingrese su usuario, correo o teléfono'
+                          : authRes.reason === 'empty_pass' ? '⚠️ Ingrese su contraseña'
+                          : '⚠️ Credenciales incorrectas (usuario/email/teléfono o contraseña)';
+        }
+        if (passEl) {
+          passEl.value = '';
+          passEl.focus();
+        }
+        // Shake animation
+        const card = document.getElementById('loginCard');
+        if (card) {
+          card.style.animation = 'none';
+          card.offsetHeight; // reflow
+          card.style.animation = 'shake 0.4s ease';
+        }
+      }
+    } catch (e) {
+      console.error('Error in _handleAdminLogin:', e);
+      if (typeof App !== 'undefined' && App.showToast) {
+        App.showToast('Error al iniciar sesión: ' + e.message, 'error');
+      }
     }
   },
 
   _handleProfLogin() {
-    const professorId = document.getElementById('loginProfSelect').value;
-    if (!professorId) {
-      App.showToast('Seleccioná un profesor para ingresar', 'error');
-      return;
-    }
-    if (this.loginProfessor(professorId)) {
-      this._enterApp('professor', professorId);
+    try {
+      const select = document.getElementById('loginProfSelect');
+      const professorId = select ? select.value : '';
+
+      if (!professorId) {
+        if (typeof App !== 'undefined' && App.showToast) {
+          App.showToast('Seleccioná un profesor de la lista para ingresar', 'error');
+        }
+        return;
+      }
+
+      if (Auth.loginProfessor(professorId)) {
+        Auth._enterApp('professor', professorId);
+      } else {
+        if (typeof App !== 'undefined' && App.showToast) {
+          App.showToast('No se pudo ingresar con ese perfil de profesor', 'error');
+        }
+      }
+    } catch (e) {
+      console.error('Error in _handleProfLogin:', e);
+      if (typeof App !== 'undefined' && App.showToast) {
+        App.showToast('Error al ingresar: ' + e.message, 'error');
+      }
     }
   },
 
   _handleLogout() {
-    App.confirm(
-      '¿Cerrar sesión?',
-      'Se cerrará la sesión actual. Los datos se conservan.',
-      () => {
-        this.logout();
-        this._showLoginScreen();
-      }
-    );
+    if (typeof App !== 'undefined' && App.confirm) {
+      App.confirm(
+        '¿Cerrar sesión?',
+        'Se cerrará la sesión actual. Los datos se conservan.',
+        () => {
+          Auth.logout();
+          Auth._showLoginScreen();
+        }
+      );
+    } else {
+      Auth.logout();
+      Auth._showLoginScreen();
+    }
   },
 
   /* ================================================================
@@ -269,17 +350,19 @@ const Auth = {
     document.body.classList.add(`session-${type}`);
 
     // Update session info in sidebar
-    this._updateSidebarSession(type, professorId);
+    Auth._updateSidebarSession(type, professorId);
 
     // Set active teacher for data context
     if (type === 'professor' && professorId) {
-      Storage.setActiveTeacher(professorId);
+      if (typeof Storage !== 'undefined') Storage.setActiveTeacher(professorId);
     }
 
     // Update active teacher bar and navigate
-    App.updateActiveTeacherBar();
-    App.navigate('calendar');
-    App._checkFirstRun();
+    if (typeof App !== 'undefined') {
+      App.updateActiveTeacherBar();
+      App.navigate('calendar');
+      if (App._checkFirstRun) App._checkFirstRun();
+    }
   },
 
   _showLoginScreen() {
@@ -290,17 +373,23 @@ const Auth = {
       loginScreen.style.display = 'flex';
     }
     // Re-populate professors in case new ones were added
-    this._populateProfessors();
+    Auth._populateProfessors();
     // Reset form
-    document.getElementById('loginUser').value = '';
-    document.getElementById('loginPass').value = '';
-    document.getElementById('loginError').style.display = 'none';
+    const userInput = document.getElementById('loginUser');
+    const passInput = document.getElementById('loginPass');
+    const errEl     = document.getElementById('loginError');
+
+    if (userInput) userInput.value = '';
+    if (passInput) passInput.value = '';
+    if (errEl) errEl.style.display = 'none';
   },
 
   _updateSidebarSession(type, professorId) {
     const nameEl   = document.getElementById('sessionName');
     const roleEl   = document.getElementById('sessionRole');
     const avatarEl = document.getElementById('sessionAvatar');
+
+    if (!nameEl || !roleEl || !avatarEl) return;
 
     if (type === 'admin') {
       nameEl.textContent   = 'Administrador';
@@ -311,12 +400,12 @@ const Auth = {
       avatarEl.style.borderColor = 'rgba(245,158,11,0.4)';
       avatarEl.style.color = '#f59e0b';
     } else {
-      const t = Storage.getTeacher(professorId);
+      const t = (typeof Storage !== 'undefined') ? Storage.getTeacher(professorId) : null;
       if (t) {
-        nameEl.textContent   = Utils.fullName(t.name, t.lastName);
+        nameEl.textContent   = (typeof Utils !== 'undefined' && Utils.fullName) ? Utils.fullName(t.name, t.lastName) : `${t.name} ${t.lastName}`;
         roleEl.textContent   = 'Profesor';
         roleEl.className     = 'session-role';
-        avatarEl.textContent = Utils.initials(t.name, t.lastName);
+        avatarEl.textContent = (typeof Utils !== 'undefined' && Utils.initials) ? Utils.initials(t.name, t.lastName) : 'PR';
         avatarEl.style.background = '';
         avatarEl.style.borderColor = '';
         avatarEl.style.color = '';
@@ -328,13 +417,13 @@ const Auth = {
      BOOT — CHECK SESSION ON APP START
      ================================================================ */
   boot() {
-    if (this.isLoggedIn()) {
+    if (Auth.isLoggedIn()) {
       // Restore existing session
-      const session = this.getSession();
-      this._enterApp(session.type, session.professorId);
+      const session = Auth.getSession();
+      Auth._enterApp(session.type, session.professorId);
     } else {
       // Show login screen
-      this._showLoginScreen();
+      Auth._showLoginScreen();
     }
   },
 };
