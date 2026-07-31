@@ -134,6 +134,15 @@ const Classes = {
       `;
     }
 
+    const statusClass = [
+      cls.status === 'completed' ? 'row-completed' : cls.status === 'cancelled' ? 'row-cancelled' : '',
+      cls.isManualPrice ? 'row-manual-price' : ''
+    ].filter(Boolean).join(' ');
+
+    const manualBadge = cls.isManualPrice
+      ? `<span class="badge-manual-price" title="Precio modificado manualmente">✏️ Personalizado</span>`
+      : '';
+
     const tr = document.createElement('tr');
     tr.className = statusClass;
     tr.dataset.id = cls.id;
@@ -144,7 +153,7 @@ const Classes = {
       <td class="cell-personas">${cls.persons || 1}</td>
       <td>${studentsHtml}</td>
       <td>${tipoLabels[cls.tipo] || '<span style="color:var(--text-muted)">-</span>'}</td>
-      <td class="cell-valor">${Utils.formatCurrency(cls.value)}</td>
+      <td class="cell-valor">${Utils.formatCurrency(cls.value)}${manualBadge}</td>
       <td class="cell-prof">${Utils.formatCurrency(cls.profCut)}</td>
       <td class="cell-club">${Utils.formatCurrency(cls.clubCut)}</td>
       <td class="cell-factura">${cls.invoiceNumber || '-'}</td>
@@ -498,7 +507,11 @@ const Classes = {
       calc = Utils.calcValue(tipo, persons, settings);
     }
 
-    const activeTeacherId = Storage.getActiveTeacher();
+    const activeTeacherId = (typeof Auth !== 'undefined' && Auth.isProfessor())
+      ? Auth.getCurrentProfessorId()
+      : Storage.getActiveTeacher();
+
+    const isManualPrice = manual !== '' && manual !== null && manual !== undefined;
 
     const data = {
       date,
@@ -512,6 +525,7 @@ const Classes = {
       paymentMethod: pago,
       invoiceNumber: factura,
       teacherId: activeTeacherId,
+      isManualPrice,
     };
 
     if (id) {

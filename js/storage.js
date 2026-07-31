@@ -47,10 +47,15 @@ const Storage = {
   },
 
   /* ================================================================
-     SETTINGS
+     SETTINGS (Supports per-teacher settings when in professor session)
      ================================================================ */
   getSettings() {
-    const saved = this._get(this.KEYS.SETTINGS);
+    let key = this.KEYS.SETTINGS;
+    if (typeof Auth !== 'undefined' && Auth.isProfessor() && Auth.getCurrentProfessorId()) {
+      key = `${this.KEYS.SETTINGS}_teacher_${Auth.getCurrentProfessorId()}`;
+    }
+
+    const saved = this._get(key) || this._get(this.KEYS.SETTINGS);
     // Deep merge with defaults
     const settings = { ...this.DEFAULT_SETTINGS };
     if (saved) {
@@ -70,7 +75,11 @@ const Storage = {
   },
 
   saveSettings(settings) {
-    this._set(this.KEYS.SETTINGS, settings);
+    let key = this.KEYS.SETTINGS;
+    if (typeof Auth !== 'undefined' && Auth.isProfessor() && Auth.getCurrentProfessorId()) {
+      key = `${this.KEYS.SETTINGS}_teacher_${Auth.getCurrentProfessorId()}`;
+    }
+    this._set(key, settings);
     if (typeof CloudSync !== 'undefined') CloudSync.pushSettings(settings);
   },
 
@@ -200,10 +209,19 @@ const Storage = {
   },
 
   /* ================================================================
-     CLASSES
+     CLASSES (Privacy scoped: Professors only see their own classes)
      ================================================================ */
-  getClasses() {
+  getAllClassesRaw() {
     return this._get(this.KEYS.CLASSES) || [];
+  },
+
+  getClasses() {
+    const raw = this.getAllClassesRaw();
+    if (typeof Auth !== 'undefined' && Auth.isProfessor()) {
+      const profId = Auth.getCurrentProfessorId();
+      return raw.filter(c => c.teacherId === profId);
+    }
+    return raw;
   },
 
   saveClasses(classes) {
@@ -236,7 +254,11 @@ const Storage = {
   },
 
   addClass(data) {
-    const classes = this.getClasses();
+    const raw = this.getAllClassesRaw();
+    const activeProfId = (typeof Auth !== 'undefined' && Auth.isProfessor())
+      ? Auth.getCurrentProfessorId()
+      : (data.teacherId || this.getActiveTeacher());
+
     const cls = {
       id: Utils.generateId(),
       dayNumber: this.getNextDayNumber(data.date),
@@ -251,27 +273,28 @@ const Storage = {
       invoiceNumber: data.invoiceNumber || '',
       paymentMethod: data.paymentMethod || '',
       status: data.status || 'pending',
-      teacherId: data.teacherId || null,
+      teacherId: activeProfId || null,
+      isManualPrice: !!data.isManualPrice,
       createdAt: new Date().toISOString(),
     };
-    classes.push(cls);
-    this.saveClasses(classes);
+    raw.push(cls);
+    this.saveClasses(raw);
     if (typeof CloudSync !== 'undefined') CloudSync.push('CLASSES', cls.id, cls);
     return cls;
   },
 
   updateClass(id, data) {
-    const classes = this.getClasses();
-    const idx = classes.findIndex(c => c.id === id);
+    const raw = this.getAllClassesRaw();
+    const idx = raw.findIndex(c => c.id === id);
     if (idx === -1) return null;
-    classes[idx] = { ...classes[idx], ...data, id };
-    this.saveClasses(classes);
-    if (typeof CloudSync !== 'undefined') CloudSync.push('CLASSES', id, classes[idx]);
-    return classes[idx];
+    raw[idx] = { ...raw[idx], ...data, id };
+    this.saveClasses(raw);
+    if (typeof CloudSync !== 'undefined') CloudSync.push('CLASSES', id, raw[idx]);
+    return raw[idx];
   },
 
   deleteClass(id) {
-    const allClasses = this.getClasses();
+    const allClasses = this.getAllClassesRaw();
     const deletedClass = allClasses.find(c => c.id === id);
     const remaining = allClasses.filter(c => c.id !== id);
     this.saveClasses(remaining);

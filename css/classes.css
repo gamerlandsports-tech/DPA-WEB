@@ -97,6 +97,27 @@
   text-align: center;
 }
 
+/* ---- Manual Price Override Badge ---- */
+.badge-manual-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.classes-table tbody tr.row-manual-price td.cell-valor {
+  color: #fbbf24;
+  font-weight: 700;
+}
+
 .cell-hora {
   font-weight: 600;
   font-size: 12px;

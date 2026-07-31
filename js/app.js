@@ -58,7 +58,7 @@ const App = {
     this._currentSection = section;
 
     // Guard admin-only sections for professor users
-    const adminOnlySections = ['teachers', 'settings'];
+    const adminOnlySections = ['teachers'];
     if (adminOnlySections.includes(section) && Auth.isProfessor()) {
       this.showToast('Esta sección es solo para administradores', 'error');
       return;
