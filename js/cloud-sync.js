@@ -29,32 +29,50 @@ const CloudSync = {
   /* ================================================================
      INIT — Connect to Firebase
      ================================================================ */
+  getConfig() {
+    let savedConfig = null;
+    try {
+      savedConfig = JSON.parse(localStorage.getItem('dpa_firebase_custom_config'));
+    } catch(e) {}
+
+    if (savedConfig && savedConfig.apiKey) return savedConfig;
+
+    return (typeof window !== 'undefined' && window.FIREBASE_CONFIG)
+      ? window.FIREBASE_CONFIG
+      : ((typeof FIREBASE_CONFIG !== 'undefined') ? FIREBASE_CONFIG : null);
+  },
+
   async init() {
     this._setStatus('syncing');
 
-    // Check if Firebase SDK is loaded and config is filled in
+    // Check if Firebase SDK is loaded
     if (typeof firebase === 'undefined') {
       console.warn('CloudSync: Firebase SDK no encontrado. Usando solo localStorage.');
       this._setStatus('offline');
-      return;
+      this.isInitialized = false;
+      this.isConnected = false;
+      return false;
     }
 
-    const config = (typeof window !== 'undefined' && window.FIREBASE_CONFIG)
-      ? window.FIREBASE_CONFIG
-      : ((typeof FIREBASE_CONFIG !== 'undefined') ? FIREBASE_CONFIG : null);
+    const config = this.getConfig();
 
     if (!config || !config.apiKey || config.apiKey === 'TU_API_KEY_AQUI') {
       console.warn('CloudSync: Credenciales de Firebase no configuradas. Usando solo localStorage.');
       this._setStatus('not-configured');
-      return;
+      this.isInitialized = false;
+      this.isConnected = false;
+      return false;
     }
 
     try {
-      // Initialize Firebase (avoid re-initialization)
-      if (!firebase.apps || firebase.apps.length === 0) {
+      // Re-initialize if custom config changed
+      if (firebase.apps && firebase.apps.length > 0) {
+        // If app already exists, use it
+        this.db = firebase.firestore();
+      } else {
         firebase.initializeApp(config);
+        this.db = firebase.firestore();
       }
-      this.db = firebase.firestore();
 
       // Enable offline persistence safely
       try {
@@ -77,11 +95,18 @@ const CloudSync = {
       // Pull data and set listeners in background
       this.pullAll().then(() => {
         this._setupListeners();
-      }).catch(err => console.warn('CloudSync: Sync en segundo plano:', err));
+      }).catch(err => {
+        console.warn('CloudSync: Sync en segundo plano:', err);
+      });
+
+      return true;
 
     } catch (error) {
       console.error('CloudSync: Error al conectar con Firebase:', error);
       this._setStatus('error');
+      this.isInitialized = false;
+      this.isConnected = false;
+      return false;
     }
   },
 

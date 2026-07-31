@@ -246,11 +246,17 @@ const App = {
     // Cloud sync buttons
     const btnPush = document.getElementById('btnPushAllCloud');
     if (btnPush) {
-      btnPush.addEventListener('click', () => {
-        if (typeof CloudSync !== 'undefined' && CloudSync.isInitialized) {
-          CloudSync.pushAll();
-        } else {
-          this.showToast('Firebase no está configurado aún. Revise js/firebase-config.js', 'error');
+      btnPush.addEventListener('click', async () => {
+        if (typeof CloudSync !== 'undefined') {
+          if (!CloudSync.isInitialized) {
+            this.showToast('Conectando a Firebase Nube...', 'info');
+            await CloudSync.init();
+          }
+          if (CloudSync.isInitialized) {
+            CloudSync.pushAll();
+          } else {
+            this.showToast('⚠️ No se pudo conectar a Firestore. Verifique que la base de datos esté activa en Firebase Console.', 'error');
+          }
         }
       });
     }
@@ -258,16 +264,25 @@ const App = {
     const btnPull = document.getElementById('btnPullAllCloud');
     if (btnPull) {
       btnPull.addEventListener('click', async () => {
-        if (typeof CloudSync !== 'undefined' && CloudSync.isInitialized) {
-          this.showToast('Descargando datos de la nube...', 'info');
-          await CloudSync.pullAll();
-          this.showToast('✅ Datos recargados desde la nube', 'success');
-          Calendar.refresh();
-        } else {
-          this.showToast('Firebase no está configurado aún', 'error');
+        if (typeof CloudSync !== 'undefined') {
+          if (!CloudSync.isInitialized) {
+            this.showToast('Conectando a Firebase Nube...', 'info');
+            await CloudSync.init();
+          }
+          if (CloudSync.isInitialized) {
+            this.showToast('Descargando datos de la nube...', 'info');
+            await CloudSync.pullAll();
+            this.showToast('✅ Datos recargados desde la nube', 'success');
+            if (typeof Calendar !== 'undefined') Calendar.refresh();
+          } else {
+            this.showToast('⚠️ No se pudo conectar a Firestore. Verifique que la base de datos esté activa en Firebase Console.', 'error');
+          }
         }
       });
     }
+
+    // Init Firebase Config Editor handlers
+    this._initFirebaseConfigEditor();
 
     // Change password button (Settings section)
     const btnPass = document.getElementById('btnUpdatePassword');
@@ -390,6 +405,79 @@ const App = {
           }
         }
         closeModal();
+      });
+    }
+  },
+
+  /* ================================================================
+     FIREBASE CONFIG EDITOR (SETTINGS)
+     ================================================================ */
+  _initFirebaseConfigEditor() {
+    const toggleBtn = document.getElementById('btnToggleFirebaseConfig');
+    const editor    = document.getElementById('firebaseConfigEditor');
+    const btnSave   = document.getElementById('btnSaveFirebaseConfig');
+    const btnReset  = document.getElementById('btnResetFirebaseConfig');
+
+    if (toggleBtn && editor) {
+      toggleBtn.addEventListener('click', () => {
+        const isHidden = editor.style.display === 'none';
+        editor.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+          const cfg = (typeof CloudSync !== 'undefined') ? CloudSync.getConfig() : {};
+          if (cfg) {
+            if (document.getElementById('fbApiKey')) document.getElementById('fbApiKey').value = cfg.apiKey || '';
+            if (document.getElementById('fbProjectId')) document.getElementById('fbProjectId').value = cfg.projectId || '';
+            if (document.getElementById('fbAuthDomain')) document.getElementById('fbAuthDomain').value = cfg.authDomain || '';
+            if (document.getElementById('fbAppId')) document.getElementById('fbAppId').value = cfg.appId || '';
+          }
+        }
+      });
+    }
+
+    if (btnSave) {
+      btnSave.addEventListener('click', async () => {
+        const apiKey     = (document.getElementById('fbApiKey').value || '').trim();
+        const projectId  = (document.getElementById('fbProjectId').value || '').trim();
+        const authDomain = (document.getElementById('fbAuthDomain').value || '').trim();
+        const appId      = (document.getElementById('fbAppId').value || '').trim();
+
+        if (!apiKey || !projectId) {
+          this.showToast('Ingrese al menos apiKey y projectId', 'error');
+          return;
+        }
+
+        const customCfg = {
+          apiKey,
+          projectId,
+          authDomain: authDomain || `${projectId}.firebaseapp.com`,
+          storageBucket: `${projectId}.firebasestorage.app`,
+          appId: appId || ''
+        };
+
+        localStorage.setItem('dpa_firebase_custom_config', JSON.stringify(customCfg));
+        window.FIREBASE_CONFIG = customCfg;
+
+        this.showToast('Guardando y probando conexión Firebase...', 'info');
+        if (typeof CloudSync !== 'undefined') {
+          const ok = await CloudSync.init();
+          if (ok) {
+            this.showToast('✅ Conectado exitosamente a Firebase', 'success');
+            if (editor) editor.style.display = 'none';
+          } else {
+            this.showToast('⚠️ Claves guardadas pero no se pudo conectar. Verifique que la base de datos Firestore esté activa en Firebase Console.', 'error');
+          }
+        }
+      });
+    }
+
+    if (btnReset) {
+      btnReset.addEventListener('click', async () => {
+        localStorage.removeItem('dpa_firebase_custom_config');
+        this.showToast('Restaurando configuración predeterminada...', 'info');
+        if (typeof CloudSync !== 'undefined') {
+          await CloudSync.init();
+        }
+        if (editor) editor.style.display = 'none';
       });
     }
   },
