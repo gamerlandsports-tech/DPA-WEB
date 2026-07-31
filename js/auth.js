@@ -128,8 +128,11 @@ const Auth = {
     const t = (typeof Storage !== 'undefined') ? Storage.getTeacher(professorId) : null;
     if (!t) return false;
     if (pass) {
-      const tPass = t.password || Auth.ADMIN_PASS;
-      if (pass !== tPass && pass !== Auth.ADMIN_PASS) return false;
+      const tPass = (t.password && t.password.trim()) ? t.password.trim() : Auth.ADMIN_PASS;
+      const passTrim = pass.trim();
+      if (passTrim !== tPass && passTrim !== Auth.ADMIN_PASS && passTrim.toLowerCase() !== Auth.ADMIN_PASS.toLowerCase()) {
+        return false;
+      }
     }
     Auth.setSession({ type: 'professor', professorId });
     if (typeof Storage !== 'undefined') Storage.setActiveTeacher(professorId);
@@ -156,7 +159,7 @@ const Auth = {
 
     const teachers = (typeof Storage !== 'undefined' && Storage.getTeachers) ? Storage.getTeachers() : [];
 
-    select.innerHTML = '<option value="">— Seleccionar —</option>';
+    select.innerHTML = '<option value="">— Seleccionar Profesor —</option>';
 
     if (teachers.length === 0) {
       select.style.display = 'none';
@@ -184,9 +187,11 @@ const Auth = {
         document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
         const panel = document.getElementById(`panel${(typeof Utils !== 'undefined' && Utils.capitalize) ? Utils.capitalize(tab) : tab.charAt(0).toUpperCase() + tab.slice(1)}`);
         if (panel) panel.classList.add('active');
-        // Clear error
+        // Clear errors
         const err = document.getElementById('loginError');
+        const profErr = document.getElementById('loginProfError');
         if (err) err.style.display = 'none';
+        if (profErr) profErr.style.display = 'none';
       });
     });
   },
@@ -208,11 +213,19 @@ const Auth = {
       };
     }
 
-    // Enter key support
+    // Enter key support for admin pass
     const passInput = document.getElementById('loginPass');
     if (passInput) {
       passInput.onkeydown = (e) => {
         if (e.key === 'Enter') Auth._handleAdminLogin();
+      };
+    }
+
+    // Enter key support for professor pass
+    const profPassInput = document.getElementById('loginProfPass');
+    if (profPassInput) {
+      profPassInput.onkeydown = (e) => {
+        if (e.key === 'Enter') Auth._handleProfLogin();
       };
     }
 
@@ -226,7 +239,7 @@ const Auth = {
       };
     }
 
-    // Password toggle
+    // Password toggle for admin panel
     const togglePass = document.getElementById('togglePass');
     if (togglePass) {
       togglePass.onclick = () => {
@@ -238,6 +251,23 @@ const Auth = {
           } else {
             input.type = 'password';
             togglePass.textContent = '👁';
+          }
+        }
+      };
+    }
+
+    // Password toggle for professor panel
+    const toggleProfPass = document.getElementById('toggleProfPass');
+    if (toggleProfPass) {
+      toggleProfPass.onclick = () => {
+        const input = document.getElementById('loginProfPass');
+        if (input) {
+          if (input.type === 'password') {
+            input.type = 'text';
+            toggleProfPass.textContent = '🙈';
+          } else {
+            input.type = 'password';
+            toggleProfPass.textContent = '👁';
           }
         }
       };
@@ -294,20 +324,50 @@ const Auth = {
   _handleProfLogin() {
     try {
       const select = document.getElementById('loginProfSelect');
+      const passEl = document.getElementById('loginProfPass');
+      const errEl  = document.getElementById('loginProfError');
+
       const professorId = select ? select.value : '';
+      const pass        = passEl ? passEl.value : '';
+
+      if (errEl) errEl.style.display = 'none';
 
       if (!professorId) {
-        if (typeof App !== 'undefined' && App.showToast) {
-          App.showToast('Seleccioná un profesor de la lista para ingresar', 'error');
+        if (errEl) {
+          errEl.textContent = '⚠️ Seleccioná un profesor de la lista';
+          errEl.style.display = 'block';
         }
         return;
       }
 
-      if (Auth.loginProfessor(professorId)) {
+      if (!pass) {
+        if (errEl) {
+          errEl.textContent = '⚠️ Por favor ingresá tu contraseña de profesor';
+          errEl.style.display = 'block';
+        }
+        if (passEl) passEl.focus();
+        return;
+      }
+
+      if (Auth.loginProfessor(professorId, pass)) {
+        if (errEl) errEl.style.display = 'none';
+        if (passEl) passEl.value = '';
         Auth._enterApp('professor', professorId);
       } else {
-        if (typeof App !== 'undefined' && App.showToast) {
-          App.showToast('No se pudo ingresar con ese perfil de profesor', 'error');
+        if (errEl) {
+          errEl.textContent = '⚠️ Contraseña incorrecta para el profesor seleccionado';
+          errEl.style.display = 'block';
+        }
+        if (passEl) {
+          passEl.value = '';
+          passEl.focus();
+        }
+        // Shake animation
+        const card = document.getElementById('loginCard');
+        if (card) {
+          card.style.animation = 'none';
+          card.offsetHeight; // reflow
+          card.style.animation = 'shake 0.4s ease';
         }
       }
     } catch (e) {
@@ -366,14 +426,20 @@ const Auth = {
     }
     // Re-populate professors in case new ones were added
     Auth._populateProfessors();
-    // Reset form
-    const userInput = document.getElementById('loginUser');
-    const passInput = document.getElementById('loginPass');
-    const errEl     = document.getElementById('loginError');
+    // Reset forms
+    const userInput  = document.getElementById('loginUser');
+    const passInput  = document.getElementById('loginPass');
+    const profSelect = document.getElementById('loginProfSelect');
+    const profPass   = document.getElementById('loginProfPass');
+    const errEl      = document.getElementById('loginError');
+    const profErrEl  = document.getElementById('loginProfError');
 
     if (userInput) userInput.value = '';
     if (passInput) passInput.value = '';
+    if (profSelect) profSelect.value = '';
+    if (profPass) profPass.value = '';
     if (errEl) errEl.style.display = 'none';
+    if (profErrEl) profErrEl.style.display = 'none';
   },
 
   _updateSidebarSession(type, professorId) {
@@ -432,3 +498,5 @@ shakeStyle.textContent = `
   }
 `;
 document.head.appendChild(shakeStyle);
+
+window.Auth = Auth;

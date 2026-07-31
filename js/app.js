@@ -20,6 +20,7 @@ const App = {
     this._initConfirm();
     this._initSettings();
     this._initClassesSection();
+    this._initChangePasswordModal();
     this._updateTopbarDate();
 
     // Init all modules
@@ -268,7 +269,7 @@ const App = {
       });
     }
 
-    // Change password button
+    // Change password button (Settings section)
     const btnPass = document.getElementById('btnUpdatePassword');
     if (btnPass) {
       btnPass.addEventListener('click', () => {
@@ -298,6 +299,97 @@ const App = {
         }
         document.getElementById('newPassInput').value = '';
         document.getElementById('confirmPassInput').value = '';
+      });
+    }
+  },
+
+  /* ================================================================
+     CHANGE PASSWORD MODAL
+     ================================================================ */
+  _initChangePasswordModal() {
+    const btnSidebar  = document.getElementById('btnSidebarChangePass');
+    const overlay     = document.getElementById('changePassOverlay');
+    const btnClose    = document.getElementById('changePassClose');
+    const btnCancel   = document.getElementById('changePassCancel');
+    const btnSave     = document.getElementById('changePassSave');
+    const newPassInput = document.getElementById('modalNewPass');
+    const confPassInput = document.getElementById('modalConfirmPass');
+
+    const openModal = () => {
+      if (newPassInput) newPassInput.value = '';
+      if (confPassInput) confPassInput.value = '';
+      if (overlay) overlay.classList.add('open');
+      if (newPassInput) newPassInput.focus();
+    };
+
+    const closeModal = () => {
+      if (overlay) overlay.classList.remove('open');
+    };
+
+    if (btnSidebar) btnSidebar.addEventListener('click', openModal);
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+    if (overlay) {
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) closeModal();
+      });
+    }
+
+    // Pass toggles inside modal
+    const toggleNew = document.getElementById('toggleModalNewPass');
+    if (toggleNew && newPassInput) {
+      toggleNew.onclick = () => {
+        if (newPassInput.type === 'password') {
+          newPassInput.type = 'text';
+          toggleNew.textContent = '🙈';
+        } else {
+          newPassInput.type = 'password';
+          toggleNew.textContent = '👁';
+        }
+      };
+    }
+
+    const toggleConf = document.getElementById('toggleModalConfirmPass');
+    if (toggleConf && confPassInput) {
+      toggleConf.onclick = () => {
+        if (confPassInput.type === 'password') {
+          confPassInput.type = 'text';
+          toggleConf.textContent = '🙈';
+        } else {
+          confPassInput.type = 'password';
+          toggleConf.textContent = '👁';
+        }
+      };
+    }
+
+    if (btnSave) {
+      btnSave.addEventListener('click', () => {
+        const newPass = (newPassInput ? newPassInput.value : '').trim();
+        const confirmPass = (confPassInput ? confPassInput.value : '').trim();
+
+        if (!newPass) {
+          this.showToast('Ingresá la nueva contraseña', 'error');
+          return;
+        }
+        if (newPass !== confirmPass) {
+          this.showToast('Las contraseñas no coinciden', 'error');
+          return;
+        }
+
+        if (Auth.isAdmin()) {
+          const settings = Storage.getSettings();
+          settings.adminPass = newPass;
+          Storage.saveSettings(settings);
+          this.showToast('🔑 Contraseña de Administrador actualizada', 'success');
+        } else if (Auth.isProfessor()) {
+          const profId = Auth.getCurrentProfessorId();
+          if (profId) {
+            Storage.updateTeacher(profId, { password: newPass });
+            this.showToast('🔑 Tu contraseña de Profesor fue actualizada', 'success');
+          }
+        }
+        closeModal();
       });
     }
   },
@@ -415,6 +507,8 @@ const App = {
     }
   },
 };
+
+window.App = App;
 
 /* ================================================================
    BOOT

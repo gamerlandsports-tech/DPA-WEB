@@ -114,6 +114,7 @@ const Storage = {
       phone: data.phone || '',
       email: data.email || '',
       percentage: Number(data.percentage) || 50,
+      password: data.password || '',
       createdAt: new Date().toISOString(),
     };
     teachers.push(teacher);
@@ -363,3 +364,5 @@ const Storage = {
     return { total, completed, cancelled, pending, totalValue, totalProf, totalClub, classes };
   },
 };
+
+window.Storage = Storage;

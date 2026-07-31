@@ -69,12 +69,22 @@
 
       <!-- PROFESSOR LIST SELECTOR -->
       <div class="login-panel" id="panelProfessor">
-        <p class="login-hint">Seleccioná tu perfil de profesor para ingresar a tu agenda</p>
+        <p class="login-hint">Seleccioná tu perfil de profesor e ingresá tu contraseña para acceder a tu agenda</p>
         <div class="form-group">
           <label for="loginProfSelect">Elegir Profesor de la lista</label>
           <select id="loginProfSelect" class="form-control login-select">
-            <option value="">— Seleccionar —</option>
+            <option value="">— Seleccionar Profesor —</option>
           </select>
+        </div>
+        <div class="form-group" id="loginProfPassGroup">
+          <label for="loginProfPass">Contraseña de Profesor</label>
+          <div class="login-pass-wrap">
+            <input type="password" id="loginProfPass" class="form-control" placeholder="Contraseña de profesor" autocomplete="current-password" />
+            <button class="toggle-pass" id="toggleProfPass" type="button" aria-label="Mostrar contraseña">👁</button>
+          </div>
+        </div>
+        <div class="login-error" id="loginProfError" style="display:none">
+          ⚠️ Contraseña incorrecta.
         </div>
         <div class="login-no-profs" id="loginNoProfs" style="display:none">
           <p>No hay profesores registrados.<br>Ingresá en la pestaña <strong>Administrador</strong> (Usuario: <code>DPA</code>, Pass: <code>lokititopata</code>) para agregar el primer profesor.</p>
@@ -140,8 +150,8 @@
     </nav>
 
     <div class="sidebar-footer">
-      <div class="cloud-status-bar status-offline" id="cloudStatus">
-        <span class="cloud-dot">⚪</span><span class="cloud-text">Sin configurar</span>
+      <div class="cloud-status-bar status-syncing" id="cloudStatus">
+        <span class="cloud-dot">🔄</span><span class="cloud-text">Conectando...</span>
       </div>
       <div class="session-info" id="sessionInfo">
         <div class="session-avatar" id="sessionAvatar">?</div>
@@ -150,7 +160,12 @@
           <span class="session-role" id="sessionRole">—</span>
         </div>
       </div>
-      <button class="btn-logout" id="btnLogout" title="Cerrar sesión">🚪 Salir</button>
+      <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+        <button class="btn-sidebar-pass" id="btnSidebarChangePass" type="button">
+          <span>🔑</span> Cambiar Contraseña
+        </button>
+        <button class="btn-logout" id="btnLogout" type="button" onclick="Auth._handleLogout()" title="Cerrar sesión">🚪 Salir</button>
+      </div>
       <span class="version">v1.0.0</span>
     </div>
   </aside>
@@ -806,6 +821,39 @@
       <div class="modal-footer">
         <button class="btn btn-ghost" id="confirmCancel">Cancelar</button>
         <button class="btn btn-danger" id="confirmOk">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: CAMBIAR CONTRASEÑA ============ -->
+  <div class="modal-overlay" id="changePassOverlay">
+    <div class="modal modal-small" id="changePassModal">
+      <div class="modal-header">
+        <h3>🔑 Cambiar Contraseña</h3>
+        <button class="modal-close" id="changePassClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:14px;">
+          Ingresá tu nueva contraseña para actualizar el acceso a tu cuenta.
+        </p>
+        <div class="form-group">
+          <label for="modalNewPass">Nueva Contraseña <span class="required">*</span></label>
+          <div class="login-pass-wrap">
+            <input type="password" id="modalNewPass" class="form-control" placeholder="Escribí tu nueva contraseña" />
+            <button class="toggle-pass" id="toggleModalNewPass" type="button">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="modalConfirmPass">Confirmar Nueva Contraseña <span class="required">*</span></label>
+          <div class="login-pass-wrap">
+            <input type="password" id="modalConfirmPass" class="form-control" placeholder="Repetí la nueva contraseña" />
+            <button class="toggle-pass" id="toggleModalConfirmPass" type="button">👁</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="changePassCancel">Cancelar</button>
+        <button class="btn btn-primary" id="changePassSave">💾 Guardar Contraseña</button>
       </div>
     </div>
   </div>

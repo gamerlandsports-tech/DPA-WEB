@@ -30,6 +30,8 @@ const CloudSync = {
      INIT — Connect to Firebase
      ================================================================ */
   async init() {
+    this._setStatus('syncing');
+
     // Check if Firebase SDK is loaded and config is filled in
     if (typeof firebase === 'undefined') {
       console.warn('CloudSync: Firebase SDK no encontrado. Usando solo localStorage.');
@@ -37,7 +39,9 @@ const CloudSync = {
       return;
     }
 
-    const config = (typeof FIREBASE_CONFIG !== 'undefined') ? FIREBASE_CONFIG : (window.FIREBASE_CONFIG || null);
+    const config = (typeof window !== 'undefined' && window.FIREBASE_CONFIG)
+      ? window.FIREBASE_CONFIG
+      : ((typeof FIREBASE_CONFIG !== 'undefined') ? FIREBASE_CONFIG : null);
 
     if (!config || !config.apiKey || config.apiKey === 'TU_API_KEY_AQUI') {
       console.warn('CloudSync: Credenciales de Firebase no configuradas. Usando solo localStorage.');
@@ -52,16 +56,18 @@ const CloudSync = {
       }
       this.db = firebase.firestore();
 
-      // Enable offline persistence (works even without internet)
-      await this.db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-        if (err.code === 'failed-precondition') {
-          // Multiple tabs open — persistence only works in one tab at a time
+      // Enable offline persistence safely
+      try {
+        await this.db.enablePersistence({ synchronizeTabs: true });
+      } catch (err) {
+        if (err && err.code === 'failed-precondition') {
           console.warn('CloudSync: Persistencia offline no disponible (múltiples pestañas).');
-        } else if (err.code === 'unimplemented') {
-          // The current browser does not support persistence
+        } else if (err && err.code === 'unimplemented') {
           console.warn('CloudSync: Persistencia offline no soportada por este navegador.');
+        } else {
+          console.warn('CloudSync: Info sobre persistencia:', err);
         }
-      });
+      }
 
       this.isInitialized = true;
       this.isConnected = true;
@@ -297,3 +303,5 @@ const CloudSync = {
     this._listeners = [];
   },
 };
+
+window.CloudSync = CloudSync;
