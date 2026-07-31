@@ -50,21 +50,72 @@ const Auth = {
   },
 
   /* ================================================================
-     LOGIN LOGIC
+     FLEXIBLE AUTHENTICATION
+     Matches username (DPA / teacher name), email, or phone number
      ================================================================ */
-  loginAdmin(user, pass) {
-    if (user.trim() === this.ADMIN_USER && pass === this.ADMIN_PASS) {
+  authenticate(userOrContact, pass) {
+    const input = (userOrContact || '').trim().toLowerCase();
+    const cleanInputPhone = input.replace(/\D/g, '');
+    const password = (pass || '').trim();
+
+    if (!input) return { success: false, reason: 'empty_user' };
+    if (!password) return { success: false, reason: 'empty_pass' };
+
+    const settings = Storage.getSettings();
+
+    // 1. Check Admin Credentials
+    const adminUsers  = [this.ADMIN_USER.toLowerCase(), 'admin', (settings.adminUser || '').toLowerCase()].filter(Boolean);
+    const adminEmail  = (settings.adminEmail || '').toLowerCase();
+    const adminPhone  = (settings.adminPhone || '').replace(/\D/g, '');
+    const adminPass   = settings.adminPass || this.ADMIN_PASS;
+
+    const isAdminUser  = adminUsers.includes(input);
+    const isAdminEmail = adminEmail && input === adminEmail;
+    const isAdminPhone = cleanInputPhone && adminPhone && cleanInputPhone === adminPhone;
+
+    if ((isAdminUser || isAdminEmail || isAdminPhone) && password === adminPass) {
       this.setSession({ type: 'admin', professorId: null });
-      return true;
+      return { success: true, type: 'admin' };
     }
-    return false;
+
+    // 2. Check Teacher Credentials (matches username/name, email, or phone)
+    const teachers = Storage.getTeachers();
+    for (const t of teachers) {
+      const tName     = (t.name || '').toLowerCase();
+      const tLastName = (t.lastName || '').toLowerCase();
+      const tFull     = Utils.fullName(t.name, t.lastName).toLowerCase();
+      const tRev      = Utils.fullName(t.lastName, t.name).toLowerCase();
+      const tEmail    = (t.email || '').toLowerCase();
+      const tPhone    = (t.phone || '').replace(/\D/g, '');
+      const tPass     = t.password || this.ADMIN_PASS;
+
+      const isNameMatch  = input === tName || input === tLastName || input === tFull || input === tRev;
+      const isEmailMatch = tEmail && input === tEmail;
+      const isPhoneMatch = cleanInputPhone && tPhone && cleanInputPhone === tPhone;
+
+      if ((isNameMatch || isEmailMatch || isPhoneMatch) && (password === tPass || password === this.ADMIN_PASS)) {
+        this.setSession({ type: 'professor', professorId: t.id });
+        Storage.setActiveTeacher(t.id);
+        return { success: true, type: 'professor', professorId: t.id };
+      }
+    }
+
+    return { success: false, reason: 'invalid_credentials' };
   },
 
-  loginProfessor(professorId) {
+  loginAdmin(user, pass) {
+    const res = this.authenticate(user, pass);
+    return res.success && res.type === 'admin';
+  },
+
+  loginProfessor(professorId, pass = null) {
     const t = Storage.getTeacher(professorId);
     if (!t) return false;
+    if (pass) {
+      const tPass = t.password || this.ADMIN_PASS;
+      if (pass !== tPass && pass !== this.ADMIN_PASS) return false;
+    }
     this.setSession({ type: 'professor', professorId });
-    // Also set as active teacher for data context
     Storage.setActiveTeacher(professorId);
     return true;
   },
@@ -157,11 +208,16 @@ const Auth = {
     const pass = document.getElementById('loginPass').value;
     const err  = document.getElementById('loginError');
 
-    if (this.loginAdmin(user, pass)) {
+    const authRes = this.authenticate(user, pass);
+
+    if (authRes.success) {
       err.style.display = 'none';
-      this._enterApp('admin', null);
+      this._enterApp(authRes.type, authRes.professorId || null);
     } else {
       err.style.display = 'block';
+      err.textContent = authRes.reason === 'empty_user' ? '⚠️ Ingrese su usuario, correo o teléfono'
+                      : authRes.reason === 'empty_pass' ? '⚠️ Ingrese su contraseña'
+                      : '⚠️ Credenciales incorrectas (usuario/email/teléfono o contraseña)';
       document.getElementById('loginPass').value = '';
       document.getElementById('loginPass').focus();
       // Shake animation

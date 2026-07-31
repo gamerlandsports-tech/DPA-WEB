@@ -37,7 +37,7 @@ const CloudSync = {
       return;
     }
 
-    if (!window.FIREBASE_CONFIG || FIREBASE_CONFIG.apiKey === 'TU_API_KEY_AQUI') {
+    if (typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey === 'TU_API_KEY_AQUI') {
       console.warn('CloudSync: Credenciales de Firebase no configuradas. Usando solo localStorage.');
       this._setStatus('not-configured');
       return;
@@ -62,17 +62,14 @@ const CloudSync = {
       });
 
       this.isInitialized = true;
-      this._setStatus('syncing');
-
-      // Pull all data from Firestore into localStorage
-      await this.pullAll();
-
-      // Set up real-time listeners
-      this._setupListeners();
-
       this.isConnected = true;
       this._setStatus('connected');
       console.log('CloudSync: Conectado a Firebase Firestore ✓');
+
+      // Pull data and set listeners in background
+      this.pullAll().then(() => {
+        this._setupListeners();
+      }).catch(err => console.warn('CloudSync: Sync en segundo plano:', err));
 
     } catch (error) {
       console.error('CloudSync: Error al conectar con Firebase:', error);
