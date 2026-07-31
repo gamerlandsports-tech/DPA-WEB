@@ -92,6 +92,10 @@ const CloudSync = {
       ];
       await Promise.all(promises);
       console.log('CloudSync: Datos descargados de la nube ✓');
+
+      // Refresh UI components with newly pulled data
+      if (typeof Auth !== 'undefined') Auth._populateProfessors();
+      this._triggerViewRefresh();
     } catch (error) {
       console.warn('CloudSync: Error al descargar datos:', error);
     }

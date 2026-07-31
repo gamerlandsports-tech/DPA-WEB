@@ -86,6 +86,7 @@ const App = {
     if (titleEl) titleEl.textContent = titles[section] || section;
 
     // Section-specific actions on navigate
+    if (section === 'calendar') Calendar.renderMonth();
     if (section === 'teachers') Teachers.render();
     if (section === 'students') Students.render();
     if (section === 'stats')    Stats.render(Stats._year, Stats._month);

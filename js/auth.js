@@ -73,7 +73,10 @@ const Auth = {
     const isAdminEmail = adminEmail && input === adminEmail;
     const isAdminPhone = cleanInputPhone && adminPhone && cleanInputPhone === adminPhone;
 
-    if ((isAdminUser || isAdminEmail || isAdminPhone) && password === adminPass) {
+    const passLower = password.toLowerCase();
+    const adminPassLower = adminPass.toLowerCase();
+
+    if ((isAdminUser || isAdminEmail || isAdminPhone) && (password === adminPass || passLower === adminPassLower)) {
       this.setSession({ type: 'admin', professorId: null });
       return { success: true, type: 'admin' };
     }
