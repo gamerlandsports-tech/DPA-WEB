@@ -129,6 +129,7 @@ const Teachers = {
       App.showToast(`Profesor ${name} ${lastName} agregado`, 'success');
     }
 
+    if (typeof Auth !== 'undefined') Auth._populateProfessors();
     document.getElementById('teacherFormOverlay').classList.remove('open');
     this.render();
   },
@@ -142,6 +143,7 @@ const Teachers = {
       'Esta acción no se puede deshacer.',
       () => {
         Storage.deleteTeacher(id);
+        if (typeof Auth !== 'undefined') Auth._populateProfessors();
         App.updateActiveTeacherBar();
         this.render();
         App.showToast('Profesor eliminado', 'info');

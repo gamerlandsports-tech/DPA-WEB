@@ -319,18 +319,10 @@ const Auth = {
   },
 
   _handleLogout() {
-    if (typeof App !== 'undefined' && App.confirm) {
-      App.confirm(
-        '¿Cerrar sesión?',
-        'Se cerrará la sesión actual. Los datos se conservan.',
-        () => {
-          Auth.logout();
-          Auth._showLoginScreen();
-        }
-      );
-    } else {
-      Auth.logout();
-      Auth._showLoginScreen();
+    Auth.logout();
+    Auth._showLoginScreen();
+    if (typeof App !== 'undefined' && App.showToast) {
+      App.showToast('Sesión cerrada correctamente', 'info');
     }
   },
 
