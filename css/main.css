@@ -1477,3 +1477,6 @@ body.session-admin .admin-badge { display: inline-flex; }
   background: rgba(239,68,68,0.08);
 }
 .cloud-status-bar.status-error .cloud-text { color: var(--red); }
+
+/* Global Utility: Hidden */
+.hidden { display: none !important; }

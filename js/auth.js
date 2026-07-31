@@ -258,7 +258,11 @@ const Auth = {
      ================================================================ */
   _enterApp(type, professorId) {
     // Hide login screen
-    document.getElementById('loginScreen').classList.add('hidden');
+    const loginScreen = document.getElementById('loginScreen');
+    if (loginScreen) {
+      loginScreen.classList.add('hidden');
+      loginScreen.style.display = 'none';
+    }
 
     // Apply session body class
     document.body.classList.remove('session-admin', 'session-professor');
@@ -280,7 +284,11 @@ const Auth = {
 
   _showLoginScreen() {
     document.body.classList.remove('session-admin', 'session-professor');
-    document.getElementById('loginScreen').classList.remove('hidden');
+    const loginScreen = document.getElementById('loginScreen');
+    if (loginScreen) {
+      loginScreen.classList.remove('hidden');
+      loginScreen.style.display = 'flex';
+    }
     // Re-populate professors in case new ones were added
     this._populateProfessors();
     // Reset form
