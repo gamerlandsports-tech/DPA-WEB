@@ -37,7 +37,9 @@ const CloudSync = {
       return;
     }
 
-    if (typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey === 'TU_API_KEY_AQUI') {
+    const config = (typeof FIREBASE_CONFIG !== 'undefined') ? FIREBASE_CONFIG : (window.FIREBASE_CONFIG || null);
+
+    if (!config || !config.apiKey || config.apiKey === 'TU_API_KEY_AQUI') {
       console.warn('CloudSync: Credenciales de Firebase no configuradas. Usando solo localStorage.');
       this._setStatus('not-configured');
       return;
@@ -46,7 +48,7 @@ const CloudSync = {
     try {
       // Initialize Firebase (avoid re-initialization)
       if (!firebase.apps || firebase.apps.length === 0) {
-        firebase.initializeApp(FIREBASE_CONFIG);
+        firebase.initializeApp(config);
       }
       this.db = firebase.firestore();
 
