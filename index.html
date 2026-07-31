@@ -38,46 +38,46 @@
       <!-- Mode selector -->
       <div class="login-mode-tabs" id="loginModeTabs">
         <button class="lmt-btn active" id="tabAdmin" data-tab="admin">
-          <span>🔑</span> Ingreso Directo
+          <span>🔐</span> Administrador
         </button>
         <button class="lmt-btn" id="tabProfessor" data-tab="professor">
-          <span>👤</span> Elegir de Lista
+          <span>👤</span> Profesor
         </button>
       </div>
 
-      <!-- DIRECT CREDENTIALS LOGIN (Username / Email / Phone + Password) -->
+      <!-- ADMIN LOGIN -->
       <div class="login-panel active" id="panelAdmin">
-        <p class="login-hint">Ingresá con tu usuario, correo electrónico o teléfono</p>
+        <p class="login-hint">Acceso con credenciales de administrador o tu perfil</p>
         <div class="form-group">
           <label for="loginUser">Usuario / Email / Teléfono</label>
-          <input type="text" id="loginUser" class="form-control" placeholder="Ej: DPA, correo@ejemplo.com o +54..." autocomplete="username" />
+          <input type="text" id="loginUser" class="form-control" placeholder="Ej: DPA, admin@ejemplo.com o +54..." autocomplete="username" />
         </div>
         <div class="form-group">
           <label for="loginPass">Contraseña</label>
           <div class="login-pass-wrap">
-            <input type="password" id="loginPass" class="form-control" placeholder="Contraseña" autocomplete="current-password" />
+            <input type="password" id="loginPass" class="form-control" placeholder="Contraseña (ej: lokititopata)" autocomplete="current-password" />
             <button class="toggle-pass" id="togglePass" type="button" aria-label="Mostrar contraseña">👁</button>
           </div>
         </div>
         <div class="login-error" id="loginError" style="display:none">
-          ⚠️ Usuario, correo, teléfono o contraseña incorrectos
+          ⚠️ Credenciales incorrectas. Verifique usuario y contraseña.
         </div>
         <button class="btn btn-primary btn-login" id="btnLoginAdmin">
-          Ingresar →
+          Ingresar como Admin →
         </button>
       </div>
 
       <!-- PROFESSOR LIST SELECTOR -->
       <div class="login-panel" id="panelProfessor">
-        <p class="login-hint">Seleccioná tu perfil para ingresar</p>
+        <p class="login-hint">Seleccioná tu perfil de profesor para ingresar a tu agenda</p>
         <div class="form-group">
-          <label for="loginProfSelect">Elegir Profesor</label>
+          <label for="loginProfSelect">Elegir Profesor de la lista</label>
           <select id="loginProfSelect" class="form-control login-select">
             <option value="">— Seleccionar —</option>
           </select>
         </div>
         <div class="login-no-profs" id="loginNoProfs" style="display:none">
-          <p>No hay profesores registrados.<br>Ingresá como <strong>Administrador</strong> para crear el primer profesor.</p>
+          <p>No hay profesores registrados.<br>Ingresá en la pestaña <strong>Administrador</strong> (Usuario: <code>DPA</code>, Pass: <code>lokititopata</code>) para agregar el primer profesor.</p>
         </div>
         <button class="btn btn-primary btn-login" id="btnLoginProf">
           Ingresar como Profesor →

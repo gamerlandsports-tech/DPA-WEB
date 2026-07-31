@@ -186,6 +186,16 @@ const CloudSync = {
         this._triggerViewRefresh();
       }, err => console.warn('CloudSync: Error en listener de clases:', err));
 
+    // Listen to teachers
+    const teachersListener = this.db
+      .collection(this.COLLECTIONS.TEACHERS)
+      .onSnapshot(snapshot => {
+        const teachers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        localStorage.setItem(Storage.KEYS.TEACHERS, JSON.stringify(teachers));
+        if (typeof Auth !== 'undefined') Auth._populateProfessors();
+        if (typeof Teachers !== 'undefined' && App._currentSection === 'teachers') Teachers.render();
+      }, err => console.warn('CloudSync: Error en listener de profesores:', err));
+
     // Listen to students (for autocomplete updates)
     const studentsListener = this.db
       .collection(this.COLLECTIONS.STUDENTS)
@@ -194,7 +204,7 @@ const CloudSync = {
         localStorage.setItem(Storage.KEYS.STUDENTS, JSON.stringify(students));
       }, err => console.warn('CloudSync: Error en listener de alumnos:', err));
 
-    this._listeners.push(classesListener, studentsListener);
+    this._listeners.push(classesListener, teachersListener, studentsListener);
   },
 
   _triggerViewRefresh() {
