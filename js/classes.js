@@ -92,9 +92,6 @@ const Classes = {
       .map(id => Storage.getStudent(id))
       .filter(Boolean);
 
-    const statusClass = cls.status === 'completed' ? 'row-completed' :
-                        cls.status === 'cancelled'  ? 'row-cancelled'  : '';
-
     const tipoLabels = {
       individual: '<span class="tipo-badge tipo-individual">Individual</span>',
       grupal:     '<span class="tipo-badge tipo-grupal">Grupal</span>',

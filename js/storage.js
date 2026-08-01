@@ -97,8 +97,19 @@ const Storage = {
   /* ================================================================
      TEACHERS
      ================================================================ */
-  getTeachers() {
+  getAllTeachersRaw() {
     return this._get(this.KEYS.TEACHERS) || [];
+  },
+
+  getTeachers() {
+    const raw = this.getAllTeachersRaw();
+    if (typeof Auth !== 'undefined' && Auth.isProfessor()) {
+      const profId = Auth.getCurrentProfessorId();
+      if (profId) {
+        return raw.filter(t => t.id === profId);
+      }
+    }
+    return raw;
   },
 
   saveTeachers(teachers) {
@@ -106,7 +117,7 @@ const Storage = {
   },
 
   addTeacher(data) {
-    const teachers = this.getTeachers();
+    const teachers = this.getAllTeachersRaw();
     const teacher = {
       id: Utils.generateId(),
       name: data.name || '',
@@ -124,7 +135,7 @@ const Storage = {
   },
 
   updateTeacher(id, data) {
-    const teachers = this.getTeachers();
+    const teachers = this.getAllTeachersRaw();
     const idx = teachers.findIndex(t => t.id === id);
     if (idx === -1) return null;
     teachers[idx] = { ...teachers[idx], ...data, id };
@@ -134,7 +145,7 @@ const Storage = {
   },
 
   deleteTeacher(id) {
-    const teachers = this.getTeachers().filter(t => t.id !== id);
+    const teachers = this.getAllTeachersRaw().filter(t => t.id !== id);
     this.saveTeachers(teachers);
     if (typeof CloudSync !== 'undefined') CloudSync.delete('TEACHERS', id);
     // If active teacher was deleted, clear active
@@ -144,7 +155,7 @@ const Storage = {
   },
 
   getTeacher(id) {
-    return this.getTeachers().find(t => t.id === id) || null;
+    return this.getAllTeachersRaw().find(t => t.id === id) || null;
   },
 
   /* ================================================================
