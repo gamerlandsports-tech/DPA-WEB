@@ -230,9 +230,6 @@ const Classes = {
     const overlay = document.getElementById('classFormOverlay');
     const title   = document.getElementById('classFormTitle');
 
-    // Build time slots
-    this._populateTimeSlots();
-
     // Reset form
     document.getElementById('classFormId').value  = '';
     document.getElementById('classFormDate').value = '';
@@ -252,6 +249,10 @@ const Classes = {
       title.textContent = 'Editar Clase';
       document.getElementById('classFormId').value = cls.id;
       document.getElementById('classDate').value   = cls.date;
+      
+      // Build time slots after setting date
+      this._populateTimeSlots();
+      
       document.getElementById('classHour').value   = cls.time;
       document.getElementById('classPersonas').value = cls.persons;
       document.getElementById('classTipo').value   = cls.tipo;
@@ -267,6 +268,9 @@ const Classes = {
       const targetDate = dateStr || this._currentDate || Utils.toISO(new Date());
       document.getElementById('classDate').value = targetDate;
       document.getElementById('classFormDate').value = targetDate;
+      
+      // Build time slots after setting date
+      this._populateTimeSlots();
     }
 
     overlay.classList.add('open');
@@ -277,11 +281,38 @@ const Classes = {
     const settings = Storage.getSettings();
     const slots    = Utils.generateTimeSlots(settings.timeStart, settings.timeEnd, settings.timeInterval);
     const select   = document.getElementById('classHour');
+    
+    const dateInput = document.getElementById('classDate');
+    const selectedDate = dateInput ? dateInput.value : '';
+
+    const activeTeacherId = (typeof Auth !== 'undefined' && Auth.isProfessor())
+      ? Auth.getCurrentProfessorId()
+      : Storage.getActiveTeacher();
+
+    // Get booked time slots for this date & teacher (excluding the class being edited and cancelled classes)
+    const existingClasses = (selectedDate && activeTeacherId)
+      ? Storage.getAllClassesRaw().filter(c => 
+          c.date === selectedDate && 
+          c.teacherId === activeTeacherId && 
+          c.id !== this._editingId &&
+          c.status !== 'cancelled'
+        )
+      : [];
+
+    const bookedHours = existingClasses.map(c => c.time);
+
     select.innerHTML = '<option value="">Seleccionar hora...</option>';
     slots.forEach(slot => {
       const opt = document.createElement('option');
       opt.value = slot;
-      opt.textContent = slot;
+      
+      const isBooked = bookedHours.includes(slot);
+      if (isBooked) {
+        opt.disabled = true;
+        opt.textContent = `${slot} (Ocupado)`;
+      } else {
+        opt.textContent = slot;
+      }
       select.appendChild(opt);
     });
   },
@@ -647,6 +678,9 @@ const Classes = {
       document.getElementById(id).addEventListener('change', () => this._updateValuePreview());
     });
     document.getElementById('classValorManual').addEventListener('input', () => this._updateValuePreview());
+
+    // Update time slots dropdown when the form date is modified
+    document.getElementById('classDate').addEventListener('change', () => this._populateTimeSlots());
 
     // Autocomplete
     this.initAutocomplete();
