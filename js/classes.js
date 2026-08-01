@@ -285,9 +285,7 @@ const Classes = {
     const dateInput = document.getElementById('classDate');
     const selectedDate = dateInput ? dateInput.value : '';
 
-    const activeTeacherId = (typeof Auth !== 'undefined' && Auth.isProfessor())
-      ? Auth.getCurrentProfessorId()
-      : Storage.getActiveTeacher();
+    const activeTeacherId = Storage.getActiveTeacherId();
 
     // Get booked time slots for this date & teacher (excluding the class being edited and cancelled classes)
     const existingClasses = (selectedDate && activeTeacherId)
@@ -535,9 +533,7 @@ const Classes = {
       calc = Utils.calcValue(tipo, persons, settings);
     }
 
-    const activeTeacherId = (typeof Auth !== 'undefined' && Auth.isProfessor())
-      ? Auth.getCurrentProfessorId()
-      : Storage.getActiveTeacher();
+    const activeTeacherId = Storage.getActiveTeacherId();
 
     const isManualPrice = manual !== '' && manual !== null && manual !== undefined;
 

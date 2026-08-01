@@ -87,7 +87,22 @@ const Storage = {
      ACTIVE TEACHER
      ================================================================ */
   getActiveTeacher() {
-    return this._get(this.KEYS.ACTIVE_TEACHER);
+    const active = this._get(this.KEYS.ACTIVE_TEACHER);
+    if (active) return active;
+    const teachers = this.getAllTeachersRaw();
+    if (teachers.length > 0) {
+      this.setActiveTeacher(teachers[0].id);
+      return teachers[0].id;
+    }
+    return null;
+  },
+
+  getActiveTeacherId() {
+    if (typeof Auth !== 'undefined' && Auth.isProfessor()) {
+      const profId = Auth.getCurrentProfessorId();
+      if (profId) return profId;
+    }
+    return this.getActiveTeacher();
   },
 
   setActiveTeacher(teacherId) {
@@ -229,11 +244,11 @@ const Storage = {
 
   getClasses() {
     const raw = this.getAllClassesRaw();
-    if (typeof Auth !== 'undefined' && Auth.isProfessor()) {
-      const profId = Auth.getCurrentProfessorId();
-      return raw.filter(c => c.teacherId === profId);
+    const activeProfId = this.getActiveTeacherId();
+    if (activeProfId) {
+      return raw.filter(c => c.teacherId === activeProfId);
     }
-    return raw;
+    return [];
   },
 
   saveClasses(classes) {
@@ -267,9 +282,7 @@ const Storage = {
 
   addClass(data) {
     const raw = this.getAllClassesRaw();
-    const activeProfId = (typeof Auth !== 'undefined' && Auth.isProfessor())
-      ? Auth.getCurrentProfessorId()
-      : (data.teacherId || this.getActiveTeacher());
+    const activeProfId = data.teacherId || this.getActiveTeacherId();
 
     const cls = {
       id: Utils.generateId(),
@@ -299,7 +312,8 @@ const Storage = {
     const raw = this.getAllClassesRaw();
     const idx = raw.findIndex(c => c.id === id);
     if (idx === -1) return null;
-    raw[idx] = { ...raw[idx], ...data, id };
+    const teacherId = data.teacherId || raw[idx].teacherId || this.getActiveTeacherId();
+    raw[idx] = { ...raw[idx], ...data, teacherId, id };
     this.saveClasses(raw);
     if (typeof CloudSync !== 'undefined') CloudSync.push('CLASSES', id, raw[idx]);
     return raw[idx];
@@ -320,7 +334,8 @@ const Storage = {
    * Re-number all classes for a given date after deletion
    */
   _renumberDay(dateStr, allClasses) {
-    const sorted = Utils.sortByTime(allClasses.filter(c => c.date === dateStr));
+    const activeTeacherId = this.getActiveTeacherId();
+    const sorted = Utils.sortByTime(allClasses.filter(c => c.date === dateStr && c.teacherId === activeTeacherId));
     sorted.forEach((cls, idx) => {
       const found = allClasses.find(c => c.id === cls.id);
       if (found) {

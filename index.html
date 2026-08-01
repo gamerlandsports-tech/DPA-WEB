@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="DPA - Sistema de gestión de clases de pádel. Registro de profesores, alumnos, calendario y estadísticas." />
   <title>DPA — Gestión de Clases de Pádel</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -50,12 +53,12 @@
         <p class="login-hint">Acceso con credenciales de administrador o tu perfil</p>
         <div class="form-group">
           <label for="loginUser">Usuario / Email / Teléfono</label>
-          <input type="text" id="loginUser" class="form-control" placeholder="Ej: DPA, admin@ejemplo.com o +54..." autocomplete="username" />
+          <input type="text" id="loginUser" class="form-control" placeholder="Ej: ADMIN o DPA" autocomplete="username" />
         </div>
         <div class="form-group">
           <label for="loginPass">Contraseña</label>
           <div class="login-pass-wrap">
-            <input type="password" id="loginPass" class="form-control" placeholder="Contraseña (ej: lokititopata)" autocomplete="current-password" />
+            <input type="password" id="loginPass" class="form-control" placeholder="Contraseña (ej: 15578610)" autocomplete="current-password" />
             <button class="toggle-pass" id="togglePass" type="button" aria-label="Mostrar contraseña">👁</button>
           </div>
         </div>
@@ -87,7 +90,7 @@
           ⚠️ Contraseña incorrecta.
         </div>
         <div class="login-no-profs" id="loginNoProfs" style="display:none">
-          <p>No hay profesores registrados.<br>Ingresá en la pestaña <strong>Administrador</strong> (Usuario: <code>DPA</code>, Pass: <code>lokititopata</code>) para agregar el primer profesor.</p>
+          <p>No hay profesores registrados.<br>Ingresá en la pestaña <strong>Administrador</strong> (Usuario: <code>ADMIN</code>, Pass: <code>15578610</code>) para agregar el primer profesor.</p>
         </div>
         <button class="btn btn-primary btn-login" id="btnLoginProf" type="button" onclick="Auth._handleProfLogin()">
           Ingresar como Profesor →
@@ -832,7 +835,7 @@
         </div>
         <div class="form-group">
           <label for="teacherPassword">Contraseña de acceso personal</label>
-          <input type="password" id="teacherPassword" class="form-control" placeholder="Dejar vacío para usar 'lokititopata'" />
+          <input type="password" id="teacherPassword" class="form-control" placeholder="Dejar vacío para usar '15578610'" />
           <small style="color:var(--text-muted); font-size:11.5px; display:block; margin-top:4px">Defina la contraseña única con la que este profesor ingresará a su cuenta.</small>
         </div>
       </div>
@@ -901,17 +904,17 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <!-- App Modules -->
-  <script src="js/firebase-config.js"></script>
-  <script src="js/cloud-sync.js"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/teachers.js"></script>
-  <script src="js/students.js"></script>
-  <script src="js/classes.js"></script>
-  <script src="js/calendar.js"></script>
-  <script src="js/stats.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/firebase-config.js?v=5"></script>
+  <script src="js/cloud-sync.js?v=5"></script>
+  <script src="js/utils.js?v=5"></script>
+  <script src="js/storage.js?v=5"></script>
+  <script src="js/teachers.js?v=5"></script>
+  <script src="js/students.js?v=5"></script>
+  <script src="js/classes.js?v=5"></script>
+  <script src="js/calendar.js?v=5"></script>
+  <script src="js/stats.js?v=5"></script>
+  <script src="js/auth-new.js"></script>
+  <script src="js/app.js?v=5"></script>
 
 </body>
 </html>

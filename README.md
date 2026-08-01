@@ -63,5 +63,5 @@ Esta guía te explica en 3 pasos cómo conectar la base de datos en la nube (gra
 
 ## 🔒 Credenciales de Acceso por Defecto (Modo Admin)
 
-- **Usuario:** `DPA`
-- **Contraseña:** `lokititopata`
+- **Usuario:** `ADMIN`
+- **Contraseña:** `15578610`

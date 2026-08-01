@@ -263,9 +263,9 @@ const CloudSync = {
     this._setStatus('syncing');
 
     try {
-      const teachers = Storage.getTeachers();
+      const teachers = Storage.getAllTeachersRaw();
       const students = Storage.getStudents();
-      const classes  = Storage.getClasses();
+      const classes  = Storage.getAllClassesRaw();
       const settings = Storage.getSettings();
 
       // Batch upload (max 500 per batch in Firestore)
