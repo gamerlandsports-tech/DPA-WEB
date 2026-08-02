@@ -1027,46 +1027,47 @@ textarea.form-control { resize: vertical; min-height: 80px; }
    ============================================================ */
 .stats-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
 }
 .stats-section {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 16px;
 }
 .stats-section.full-width { grid-column: 1 / -1; }
 .stats-section h3 {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+  gap: 10px;
 }
 .stat-card {
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px;
+  padding: 10px 12px;
   text-align: center;
 }
 .stat-val {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--accent);
 }
 .stat-label {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: 2px;
+  line-height: 1.3;
 }
 
 .type-bars { display: flex; flex-direction: column; gap: 14px; }
@@ -1670,6 +1671,14 @@ body.session-admin .admin-badge { display: inline-flex; }
   .prices-grid {
     grid-template-columns: 1fr !important;
     padding: 10px !important;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
 }
 
