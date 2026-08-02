@@ -30,6 +30,7 @@ const App = {
     Calendar.init();
     Stats.init();
     if (typeof Prices !== 'undefined') Prices.init();
+    if (typeof Tournaments !== 'undefined') Tournaments.init();
 
     // Init CloudSync (Firebase)
     if (typeof CloudSync !== 'undefined') {
@@ -84,6 +85,7 @@ const App = {
       stats:    'Estadísticas',
       settings: 'Configuración',
       prices:   'Precios',
+      tournaments: 'Torneos',
     };
     const titleEl = document.getElementById('topbarTitle').querySelector('h1');
     if (titleEl) titleEl.textContent = titles[section] || section;
@@ -95,6 +97,7 @@ const App = {
     if (section === 'stats')    Stats.render(Stats._year, Stats._month);
     if (section === 'settings') this._loadSettings();
     if (section === 'prices' && typeof Prices !== 'undefined') Prices.render();
+    if (section === 'tournaments' && typeof Tournaments !== 'undefined') Tournaments.render();
     if (section === 'classes') {
       Classes.renderMonthTable(this._sectionClassesYear, this._sectionClassesMonth);
     }

@@ -12,6 +12,7 @@ const Storage = {
     CLASSES:   'dpa_classes',
     SETTINGS:  'dpa_settings',
     ACTIVE_TEACHER: 'dpa_active_teacher',
+    TOURNAMENTS: 'dpa_tournaments',
   },
 
   /* ---- Default Settings ---- */
@@ -415,6 +416,56 @@ const Storage = {
     const totalProf  = classes.reduce((s, c) => s + (c.profCut || 0), 0);
     const totalClub  = classes.reduce((s, c) => s + (c.clubCut || 0), 0);
     return { total, completed, cancelled, pending, totalValue, totalProf, totalClub, classes };
+  },
+
+  /* ================================================================
+     TOURNAMENTS
+     ================================================================ */
+  getTournaments() {
+    return this._get(this.KEYS.TOURNAMENTS) || [];
+  },
+
+  saveTournaments(tournaments) {
+    this._set(this.KEYS.TOURNAMENTS, tournaments);
+  },
+
+  getTournament(id) {
+    return this.getTournaments().find(t => String(t.id) === String(id)) || null;
+  },
+
+  addTournament(data) {
+    const tournaments = this.getTournaments();
+    const tournament = {
+      id: data.id || Utils.generateId(),
+      name: data.name || 'Nuevo Torneo',
+      date: data.date || Utils.toISO(new Date()),
+      modality: data.modality || 'americano-individual',
+      category: data.category || '6ta',
+      status: data.status || 'pending',
+      zone4Mode: data.zone4Mode || 1,
+      internalState: data.internalState || {},
+      createdAt: new Date().toISOString(),
+    };
+    tournaments.push(tournament);
+    this.saveTournaments(tournaments);
+    if (typeof CloudSync !== 'undefined') CloudSync.push('TOURNAMENTS', tournament.id, tournament);
+    return tournament;
+  },
+
+  updateTournament(id, data) {
+    const tournaments = this.getTournaments();
+    const idx = tournaments.findIndex(t => String(t.id) === String(id));
+    if (idx === -1) return null;
+    tournaments[idx] = { ...tournaments[idx], ...data, id: tournaments[idx].id };
+    this.saveTournaments(tournaments);
+    if (typeof CloudSync !== 'undefined') CloudSync.push('TOURNAMENTS', id, tournaments[idx]);
+    return tournaments[idx];
+  },
+
+  deleteTournament(id) {
+    const tournaments = this.getTournaments().filter(t => String(t.id) !== String(id));
+    this.saveTournaments(tournaments);
+    if (typeof CloudSync !== 'undefined') CloudSync.delete('TOURNAMENTS', id);
   },
 };
 

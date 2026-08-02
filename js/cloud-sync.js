@@ -24,6 +24,7 @@ const CloudSync = {
     STUDENTS: 'dpa/data/students',
     CLASSES:  'dpa/data/classes',
     SETTINGS: 'dpa/data/settings',
+    TOURNAMENTS: 'dpa/data/tournaments',
   },
 
   /* ================================================================
@@ -121,6 +122,7 @@ const CloudSync = {
         this._pullCollection('TEACHERS', Storage.KEYS.TEACHERS),
         this._pullCollection('STUDENTS', Storage.KEYS.STUDENTS),
         this._pullCollection('CLASSES',  Storage.KEYS.CLASSES),
+        this._pullCollection('TOURNAMENTS', Storage.KEYS.TOURNAMENTS),
         this._pullSettings(),
       ];
       await Promise.all(promises);
@@ -241,7 +243,16 @@ const CloudSync = {
         localStorage.setItem(Storage.KEYS.STUDENTS, JSON.stringify(students));
       }, err => console.warn('CloudSync: Error en listener de alumnos:', err));
 
-    this._listeners.push(classesListener, teachersListener, studentsListener);
+    // Listen to tournaments
+    const tournamentsListener = this.db
+      .collection(this.COLLECTIONS.TOURNAMENTS)
+      .onSnapshot(snapshot => {
+        const tournaments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        localStorage.setItem(Storage.KEYS.TOURNAMENTS, JSON.stringify(tournaments));
+        if (typeof Tournaments !== 'undefined' && App._currentSection === 'tournaments') Tournaments.render();
+      }, err => console.warn('CloudSync: Error en listener de torneos:', err));
+
+    this._listeners.push(classesListener, teachersListener, studentsListener, tournamentsListener);
   },
 
   _triggerViewRefresh() {
@@ -282,6 +293,11 @@ const CloudSync = {
       classes.forEach(c => {
         const ref = this.db.collection(this.COLLECTIONS.CLASSES).doc(c.id);
         batch.set(ref, JSON.parse(JSON.stringify(c)));
+      });
+      const tournaments = Storage.getTournaments();
+      tournaments.forEach(t => {
+        const ref = this.db.collection(this.COLLECTIONS.TOURNAMENTS).doc(t.id);
+        batch.set(ref, JSON.parse(JSON.stringify(t)));
       });
 
       await batch.commit();
