@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    DPA — alarm.js — Motor de Alarmas, Vibración y Notificaciones
    ============================================================ */
 
@@ -221,27 +221,30 @@ const AlarmEngine = {
     // 2. Mobile vibration
     this.vibrate();
 
-    // 3. Prepare Notification & WhatsApp link
+    // 3. Prepare Notification & WhatsApp link for ACTIVE PROFESSOR
+    const activeProfId = Storage.getActiveTeacherId();
+    const prof = activeProfId ? Storage.getTeacher(activeProfId) : null;
+    const profName = prof ? Utils.fullName(prof.name, prof.lastName) : 'Profesor';
+
     const students = (cls.studentIds || [])
       .map(id => Storage.getStudent(id))
       .filter(Boolean);
     const studentNames = students.map(s => Utils.fullName(s.name, s.lastName)).join(', ') || 'Alumnos';
 
-    let waUrl = null;
-    const studentWithPhone = students.find(s => s.phone && s.phone.trim());
-    if (studentWithPhone) {
-      const cleanPhone = studentWithPhone.phone.replace(/[^0-9]/g, '');
-      const msg = encodeURIComponent(`Hola ${studentWithPhone.name}! Recordatorio de DPA: Tu clase de pádel a las ${cls.time} hs empieza en ${windowMins} minutos. ¡Te esperamos!`);
-      waUrl = `https://wa.me/${cleanPhone}?text=${msg}`;
+    let profWaUrl = null;
+    if (prof && prof.phone && prof.phone.trim()) {
+      const cleanPhone = prof.phone.replace(/[^0-9]/g, '');
+      const msg = encodeURIComponent(`Hola Profe ${prof.name}! DPA Alerta: Tu clase de las ${cls.time} hs con ${studentNames} empieza en ${windowMins} minutos.`);
+      profWaUrl = `https://wa.me/${cleanPhone}?text=${msg}`;
     }
 
-    const title = `⏰ ¡Alerta de Clase (${windowMins} min)!`;
-    const message = `La clase de las ${cls.time} hs (${studentNames}) empieza en ${windowMins} minutos. Hacé clic para abrir WhatsApp.`;
+    const title = `⏰ Alerta Profe ${profName} (${windowMins} min)`;
+    const message = `La clase de las ${cls.time} hs con ${studentNames} empieza en ${windowMins} minutos. Hacé clic para avisar al Profe por WhatsApp.`;
 
-    this.sendNotification(title, message, waUrl);
+    this.sendNotification(title, message, profWaUrl);
 
     if (typeof App !== 'undefined' && App.showToast) {
-      App.showToast(`⏰ Alarma: Clase de ${cls.time} hs empieza en ${windowMins} min`, 'error');
+      App.showToast(`⏰ Alarma Profe ${profName}: Clase de ${cls.time} hs en ${windowMins} min`, 'error');
     }
   },
 
@@ -256,6 +259,12 @@ const AlarmEngine = {
 
     const diff = classMinutes - currentMinutes;
     return diff >= 0 && diff <= 30;
+  },
+
+  hasUpcomingClassToday() {
+    const todayStr = Utils.toISO(new Date());
+    const todayClasses = Storage.getClassesByDate(todayStr);
+    return todayClasses.some(c => this.isUpcomingAlert(c));
   },
 
   toggleEnabled() {

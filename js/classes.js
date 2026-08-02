@@ -632,6 +632,8 @@ const Classes = {
       isManualPrice,
     };
 
+    const sendWa = document.getElementById('chkSendStudentWa')?.checked;
+
     if (id) {
       Storage.updateClass(id, data);
       App.showToast('Clase actualizada', 'success');
@@ -645,6 +647,15 @@ const Classes = {
         }
       });
       App.showToast('Clase registrada exitosamente', 'success');
+    }
+
+    if (sendWa) {
+      const studentWithPhone = this._selectedStudents.find(s => s.phone && s.phone.trim());
+      if (studentWithPhone) {
+        const cleanPhone = studentWithPhone.phone.replace(/[^0-9]/g, '');
+        const msg = encodeURIComponent(`Hola ${studentWithPhone.name}! Tu clase de pádel fue confirmada para el ${Utils.formatShort(date)} a las ${time} hs en DPA. ¡Te esperamos!`);
+        window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+      }
     }
 
     document.getElementById('classFormOverlay').classList.remove('open');

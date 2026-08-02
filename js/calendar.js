@@ -77,12 +77,15 @@ const Calendar = {
       for (let i = 0; i < Math.min(cancelled, 3); i++) dotsHtml += '<div class="cal-dot cal-dot-cancelled"></div>';
       for (let i = 0; i < Math.min(pending, 3);   i++) dotsHtml += '<div class="cal-dot cal-dot-pending"></div>';
 
+      const isUpcomingToday = isToday && typeof AlarmEngine !== 'undefined' && AlarmEngine.hasUpcomingClassToday();
+
       const cell = document.createElement('div');
       cell.className = [
         'cal-day',
         isToday    ? 'today'    : '',
         isSelected ? 'selected' : '',
         isWeekend  ? 'weekend'  : '',
+        isUpcomingToday ? 'cal-day-upcoming-alert' : '',
       ].filter(Boolean).join(' ');
       cell.dataset.date = dateStr;
 
