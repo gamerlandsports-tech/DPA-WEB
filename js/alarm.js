@@ -275,9 +275,9 @@ const AlarmEngine = {
   },
 
   triggerAlarm(cls, windowMins) {
-    // Prepare Notification & WhatsApp link for ACTIVE PROFESSOR
-    const activeProfId = Storage.getActiveTeacherId();
-    const prof = activeProfId ? Storage.getTeacher(activeProfId) : null;
+    // 3. Prepare Notification & WhatsApp link for CLASS PROFESSOR
+    const profId = cls.teacherId || Storage.getActiveTeacherId();
+    const prof = profId ? Storage.getTeacher(profId) : null;
     const profName = prof ? Utils.fullName(prof.name, prof.lastName) : 'Profesor';
 
     const students = (cls.studentIds || [])

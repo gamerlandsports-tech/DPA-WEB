@@ -53,6 +53,7 @@ const Teachers = {
           </div>
         </div>
         <div class="person-actions">
+          ${t.phone ? `<a href="https://wa.me/${t.phone.replace(/[^0-9]/g, '')}" target="_blank" rel="noopener" class="btn-whatsapp btn-sm" title="Enviar WhatsApp al Profesor">💬 WhatsApp</a>` : ''}
           ${!isActive ? `<button class="btn btn-primary btn-sm" data-action="set-active" data-id="${t.id}">⚡ Activar</button>` : ''}
           <button class="btn btn-ghost btn-sm" data-action="edit-teacher" data-id="${t.id}">✏️ Editar</button>
           <button class="btn btn-ghost btn-sm" style="color:var(--red); border-color:rgba(239,68,68,0.3);" data-action="delete-teacher" data-id="${t.id}">🗑</button>
