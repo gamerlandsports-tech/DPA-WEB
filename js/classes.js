@@ -174,7 +174,7 @@ const Classes = {
       <td class="cell-club">${Utils.formatCurrency(cls.clubCut)}</td>
       <td class="cell-factura">${cls.invoiceNumber || '-'}</td>
       <td>${cls.paymentMethod ? `<span class="pago-badge">${pagoLabels[cls.paymentMethod] || cls.paymentMethod}</span>` : '-'}</td>
-      <td><div class="estado-cell">${statusHtml} ${waBtn}</div></td>
+      <td class="${cls.status === 'completed' ? 'cell-completed-fill' : ''}"><div class="estado-cell">${statusHtml} ${waBtn}</div></td>
       <td>
         <div class="action-btns">
           <button class="btn-edit-class" data-action="edit-class" data-id="${cls.id}" title="Editar">✏️</button>
