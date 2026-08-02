@@ -23,11 +23,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css" />
-  <link rel="stylesheet" href="css/calendar.css" />
-  <link rel="stylesheet" href="css/classes.css" />
-  <link rel="stylesheet" href="css/students.css" />
-  <link rel="stylesheet" href="css/tournaments.css" />
+  <link rel="stylesheet" href="css/main.css?v=9" />
+  <link rel="stylesheet" href="css/calendar.css?v=9" />
+  <link rel="stylesheet" href="css/classes.css?v=9" />
+  <link rel="stylesheet" href="css/students.css?v=9" />
+  <link rel="stylesheet" href="css/tournaments.css?v=9" />
 </head>
 <body>
 
@@ -450,42 +450,42 @@
       </div>
 
       <div class="stats-grid">
-        <!-- Summary cards -->
-        <div class="stats-section">
+        <!-- 1. Summary cards (Full Width at top) -->
+        <div class="stats-section full-width">
           <h3>Resumen del Mes</h3>
           <div class="stats-cards" id="statsCards">
           </div>
         </div>
 
-        <!-- By type -->
+        <!-- 2. By type -->
         <div class="stats-section">
           <h3>Por Tipo de Clase</h3>
           <div class="type-bars" id="typeBars">
           </div>
         </div>
 
-        <!-- Top students -->
-        <div class="stats-section full-width">
-          <h3>Ranking de Alumnos (mes)</h3>
-          <div class="ranking-list" id="rankingList">
-          </div>
-        </div>
-
-        <!-- Gender distribution -->
-        <div class="stats-section full-width" id="genderStatsSection">
-          <h3>Distribución por Género (alumnos del mes)</h3>
+        <!-- 3. Gender distribution -->
+        <div class="stats-section" id="genderStatsSection">
+          <h3>Distribución por Género</h3>
           <div id="genderStatsContent">
             <p style="color:var(--text-muted); font-size:13px;">Sin datos de género registrados.</p>
           </div>
         </div>
 
-        <!-- Club Advances section -->
-        <div class="stats-section full-width">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px">
-            <h3 style="margin:0">💸 Adelantos y Entregas del Club</h3>
-            <button class="btn btn-primary btn-sm" id="btnAddAdvance">💸 + Registrar Adelanto</button>
+        <!-- 4. Top students ranking -->
+        <div class="stats-section">
+          <h3>Ranking de Alumnos (mes)</h3>
+          <div class="ranking-list" id="rankingList" style="max-height:220px; overflow-y:auto; padding-right:4px">
           </div>
-          <div id="advancesListContent">
+        </div>
+
+        <!-- 5. Club Advances section -->
+        <div class="stats-section">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px">
+            <h3 style="margin:0">💸 Adelantos y Entregas</h3>
+            <button class="btn btn-primary btn-sm" id="btnAddAdvance">💸 + Registrar</button>
+          </div>
+          <div id="advancesListContent" style="max-height:220px; overflow-y:auto; padding-right:4px">
             <!-- Rendered by JS -->
           </div>
         </div>
