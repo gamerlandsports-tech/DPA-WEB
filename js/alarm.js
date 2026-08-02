@@ -30,21 +30,37 @@ const AlarmEngine = {
     }
   },
 
+  unlocked: false,
+  _wakeLock: null,
+
   _initUserAudioUnlock() {
+    const events = ['touchstart', 'touchend', 'click', 'pointerdown', 'keydown'];
     const unlock = () => {
-      if (!this.audioCtx) {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) {
-          this.audioCtx = new AudioCtx();
+      try {
+        if (!this.audioCtx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.audioCtx = new AudioCtx();
         }
-      } else if (this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume();
+        if (this.audioCtx) {
+          if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+          }
+          // Play silent buffer source to permanently unlock mobile audio output (iOS Safari & Android Chrome)
+          const buffer = this.audioCtx.createBuffer(1, 1, 22050);
+          const source = this.audioCtx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(this.audioCtx.destination);
+          source.start(0);
+          this.unlocked = true;
+        }
+      } catch (e) {
+        console.warn('AlarmEngine: Error desbloqueando audio mobile:', e);
       }
-      document.removeEventListener('click', unlock);
-      document.removeEventListener('touchstart', unlock);
+
+      events.forEach(evt => document.removeEventListener(evt, unlock));
     };
-    document.addEventListener('click', unlock);
-    document.addEventListener('touchstart', unlock);
+
+    events.forEach(evt => document.addEventListener(evt, unlock, { passive: true, capture: true }));
   },
 
   /* ================================================================
@@ -65,29 +81,29 @@ const AlarmEngine = {
 
       const now = this.audioCtx.currentTime;
 
-      // Play 3 double-beep patterns
-      [0, 0.4, 0.8].forEach(delay => {
+      // Play double-beep patterns (Loud & Clear for Mobile Speakers)
+      [0, 0.35, 0.7].forEach(delay => {
         const osc1 = this.audioCtx.createOscillator();
         const gain1 = this.audioCtx.createGain();
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(880, now + delay); // A5
-        gain1.gain.setValueAtTime(0.3, now + delay);
-        gain1.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.15);
+        osc1.type = 'triangle';
+        osc1.frequency.setValueAtTime(932.33, now + delay); // Bb5
+        gain1.gain.setValueAtTime(0.5, now + delay);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.18);
         osc1.connect(gain1);
         gain1.connect(this.audioCtx.destination);
         osc1.start(now + delay);
-        osc1.stop(now + delay + 0.15);
+        osc1.stop(now + delay + 0.18);
 
         const osc2 = this.audioCtx.createOscillator();
         const gain2 = this.audioCtx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(1174.66, now + delay + 0.15); // D6
-        gain2.gain.setValueAtTime(0.35, now + delay + 0.15);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.3);
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(1396.91, now + delay + 0.18); // F6
+        gain2.gain.setValueAtTime(0.4, now + delay + 0.18);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.35);
         osc2.connect(gain2);
         gain2.connect(this.audioCtx.destination);
-        osc2.start(now + delay + 0.15);
-        osc2.stop(now + delay + 0.3);
+        osc2.start(now + delay + 0.18);
+        osc2.stop(now + delay + 0.35);
       });
 
     } catch (e) {
@@ -101,10 +117,25 @@ const AlarmEngine = {
   vibrate() {
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       try {
-        navigator.vibrate([500, 200, 500, 200, 500]);
+        navigator.vibrate([800, 300, 800, 300, 800]);
       } catch (e) {
         console.warn('AlarmEngine: Error de vibración:', e);
       }
+    }
+  },
+
+  async _requestWakeLock() {
+    if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
+      try {
+        this._wakeLock = await navigator.wakeLock.request('screen');
+      } catch (e) {}
+    }
+  },
+
+  _releaseWakeLock() {
+    if (this._wakeLock) {
+      try { this._wakeLock.release(); } catch (e) {}
+      this._wakeLock = null;
     }
   },
 
@@ -221,6 +252,7 @@ const AlarmEngine = {
     this.stopAlarm(); // Stop any previous alarm loop
 
     this.isPlaying = true;
+    this._requestWakeLock();
 
     // 1. Play sound immediately and repeat every 1200ms
     this.playAlarmSound();
@@ -257,6 +289,7 @@ const AlarmEngine = {
 
   stopAlarm() {
     this.isPlaying = false;
+    this._releaseWakeLock();
     if (this._soundLoopTimer) {
       clearInterval(this._soundLoopTimer);
       this._soundLoopTimer = null;
@@ -327,13 +360,18 @@ const AlarmEngine = {
 
   toggleEnabled() {
     this.enabled = !this.enabled;
+    if (this.enabled) {
+      this.playAlarmSound(); // Test chime & unlock audio on touch
+    } else {
+      this.stopAlarm();
+    }
     const badge = document.getElementById('alarmStatusToggle');
     if (badge) {
       badge.textContent = this.enabled ? '🔔 Alarmas: ACTIVAS' : '🔕 Alarmas: DESACTIVADAS';
       badge.className = this.enabled ? 'alarm-toggle-badge active' : 'alarm-toggle-badge inactive';
     }
     if (typeof App !== 'undefined' && App.showToast) {
-      App.showToast(this.enabled ? '🔔 Alarmas activadas' : '🔕 Alarmas desactivadas', 'info');
+      App.showToast(this.enabled ? '🔔 Alarmas activadas (Sonido listo)' : '🔕 Alarmas desactivadas', 'info');
     }
   },
 };
