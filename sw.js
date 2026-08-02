@@ -1,5 +1,5 @@
 /* Service Worker - DPA PWA Auto-Updater & Notification Engine */
-const CACHE_NAME = 'dpa-cache-v9';
+const CACHE_NAME = 'dpa-cache-v10';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
