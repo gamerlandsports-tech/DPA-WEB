@@ -17,7 +17,17 @@ const AlarmEngine = {
   init() {
     this._requestNotificationPermission();
     this._initUserAudioUnlock();
+    this._registerServiceWorker();
+    this._requestWakeLock();
     this.startChecking();
+  },
+
+  _registerServiceWorker() {
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => {
+        console.warn('AlarmEngine: Service worker no registrado:', err);
+      });
+    }
   },
 
   _requestNotificationPermission() {
@@ -145,15 +155,28 @@ const AlarmEngine = {
   sendNotification(title, message, waUrl = null) {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       try {
-        const notif = new Notification(title, {
-          body: message,
-          icon: '🎾',
-          requireInteraction: true
-        });
-        if (waUrl) {
-          notif.onclick = () => {
-            window.open(waUrl, '_blank');
-          };
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, {
+              body: message,
+              icon: '🎾',
+              vibrate: [800, 300, 800, 300, 800],
+              data: { url: waUrl || '/' },
+              requireInteraction: true
+            });
+          });
+        } else {
+          const notif = new Notification(title, {
+            body: message,
+            icon: '🎾',
+            vibrate: [800, 300, 800, 300, 800],
+            requireInteraction: true
+          });
+          if (waUrl) {
+            notif.onclick = () => {
+              window.open(waUrl, '_blank');
+            };
+          }
         }
       } catch (e) {
         console.warn('AlarmEngine: Error en notificación push:', e);
@@ -308,34 +331,30 @@ const AlarmEngine = {
   },
 
   triggerAlarm(cls, windowMins) {
-    // 3. Prepare Notification & WhatsApp link for CLASS PROFESSOR
-    const profId = cls.teacherId || Storage.getActiveTeacherId();
-    const prof = profId ? Storage.getTeacher(profId) : null;
-    const profName = prof ? Utils.fullName(prof.name, prof.lastName) : 'Profesor';
-
     const students = (cls.studentIds || [])
       .map(id => Storage.getStudent(id))
       .filter(Boolean);
     const studentNames = students.map(s => Utils.fullName(s.name, s.lastName)).join(', ') || 'Alumnos';
 
-    let profWaUrl = null;
-    if (prof && prof.phone && prof.phone.trim()) {
-      const cleanPhone = prof.phone.replace(/[^0-9]/g, '');
-      const msg = encodeURIComponent(`Hola Profe ${prof.name}! DPA Alerta: Tu clase de las ${cls.time} hs con ${studentNames} empieza en ${windowMins} minutos.`);
-      profWaUrl = `https://wa.me/${cleanPhone}?text=${msg}`;
+    let studentWaUrl = null;
+    const studentWithPhone = students.find(s => s.phone && s.phone.trim());
+    if (studentWithPhone) {
+      const cleanPhone = studentWithPhone.phone.replace(/[^0-9]/g, '');
+      const msg = encodeURIComponent(`Hola ${studentWithPhone.name}! Recordatorio de DPA: Tu clase de las ${cls.time} hs empieza en ${windowMins} minutos. ¡Te esperamos!`);
+      studentWaUrl = `https://wa.me/${cleanPhone}?text=${msg}`;
     }
 
-    const title = `⏰ Alerta Profe ${profName} (${windowMins} min)`;
-    const message = `La clase de las ${cls.time} hs con ${studentNames} empieza en ${windowMins} minutos.`;
+    const title = `⏰ ¡Alerta de Clase (${windowMins} min)!`;
+    const message = `La clase de las ${cls.time} hs (${studentNames}) empieza en ${windowMins} minutos.`;
 
     // Start continuous audio/vibration alarm loop & modal popup
-    this.startContinuousAlarm(title, message, profWaUrl);
+    this.startContinuousAlarm(title, message, studentWaUrl);
 
     // Send push notification
-    this.sendNotification(title, message + ' Hacé clic para abrir WhatsApp.', profWaUrl);
+    this.sendNotification(title, message, studentWaUrl);
 
     if (typeof App !== 'undefined' && App.showToast) {
-      App.showToast(`⏰ Alarma Profe ${profName}: Clase de ${cls.time} hs en ${windowMins} min`, 'error');
+      App.showToast(`⏰ Alarma: Clase de ${cls.time} hs en ${windowMins} min`, 'error');
     }
   },
 

@@ -117,19 +117,16 @@ const Calendar = {
     const cell = document.querySelector(`.cal-day[data-date="${dateStr}"]`);
     if (cell) cell.classList.add('selected');
 
-    // Update daily view
-    const date  = Utils.fromISO(dateStr);
-    const title = document.getElementById('dailyTitle');
-    title.textContent = Utils.formatFull(date);
-
-    // Render classes for this day
-    Classes.renderDayTable(dateStr);
-
-    // Show daily view
-    document.getElementById('view-monthly').classList.remove('view-active');
-    document.getElementById('view-monthly').classList.add('view-hidden');
-    document.getElementById('view-daily').classList.remove('view-hidden');
-    document.getElementById('view-daily').classList.add('view-active');
+    // Navigate directly to 'classes' section in table format
+    if (typeof App !== 'undefined' && App.navigate) {
+      App.navigate('classes');
+      const [y, m] = dateStr.split('-').map(Number);
+      App._sectionClassesYear = y;
+      App._sectionClassesMonth = m - 1;
+      if (typeof Classes !== 'undefined') {
+        Classes.renderMonthTable(y, m - 1);
+      }
+    }
   },
 
   /* ================================================================

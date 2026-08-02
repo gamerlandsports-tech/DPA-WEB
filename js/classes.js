@@ -251,6 +251,9 @@ const Classes = {
     document.getElementById('classPago').value    = '';
     document.getElementById('classFactura').value = '';
     document.getElementById('classValorManual').value = '';
+    if (document.getElementById('chkSendStudentWa')) {
+      document.getElementById('chkSendStudentWa').checked = false;
+    }
     this._renderSelectedStudents();
     this._updateValuePreview();
 
