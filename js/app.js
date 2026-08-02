@@ -29,6 +29,7 @@ const App = {
     Classes.init();
     Calendar.init();
     Stats.init();
+    if (typeof Prices !== 'undefined') Prices.init();
 
     // Init CloudSync (Firebase)
     if (typeof CloudSync !== 'undefined') {
@@ -82,6 +83,7 @@ const App = {
       teachers: 'Profesores',
       stats:    'Estadísticas',
       settings: 'Configuración',
+      prices:   'Precios',
     };
     const titleEl = document.getElementById('topbarTitle').querySelector('h1');
     if (titleEl) titleEl.textContent = titles[section] || section;
@@ -92,6 +94,7 @@ const App = {
     if (section === 'students') Students.render();
     if (section === 'stats')    Stats.render(Stats._year, Stats._month);
     if (section === 'settings') this._loadSettings();
+    if (section === 'prices' && typeof Prices !== 'undefined') Prices.render();
     if (section === 'classes') {
       Classes.renderMonthTable(this._sectionClassesYear, this._sectionClassesMonth);
     }

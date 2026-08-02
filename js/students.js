@@ -35,6 +35,15 @@ const Students = {
 
     students.forEach(s => {
       const stats = Storage.getStudentStats(s.id);
+      const pkg   = Storage.getStudentPackageStatus(s.id);
+      let pkgBadge = '';
+      if (pkg.total > 0) {
+        if (pkg.isActive) {
+          pkgBadge = `<div class="student-package-badge pkg-active">📦 ${pkg.used}/${pkg.total} — Quedan ${pkg.remaining}</div>`;
+        } else {
+          pkgBadge = `<div class="student-package-badge pkg-done">📦 Paquete completado</div>`;
+        }
+      }
       const card = document.createElement('div');
       card.className = 'person-card';
       card.innerHTML = `
@@ -81,6 +90,7 @@ const Students = {
           <button class="btn btn-ghost btn-sm" data-action="edit-student" data-id="${s.id}">✏️ Editar</button>
           <button class="btn btn-ghost btn-sm" style="color:var(--red); border-color:rgba(239,68,68,0.3);" data-action="delete-student" data-id="${s.id}">🗑</button>
         </div>
+        ${pkgBadge}
       `;
       grid.appendChild(card);
     });
@@ -97,7 +107,10 @@ const Students = {
     document.getElementById('studentPhone').value     = '';
     document.getElementById('studentEmail').value     = '';
     document.getElementById('studentNotes').value     = '';
-    // Reset gender to 'no especificado'
+    document.getElementById('studentPackageTotal').value = '';
+    document.getElementById('studentPackagePrice').value = '';
+    document.getElementById('studentPackageUsed').value  = 0;
+    this._updatePackageResetBtn(0, 0);
     this._setGender('');
 
     if (studentId) {
@@ -105,11 +118,15 @@ const Students = {
       if (!s) return;
       title.textContent = 'Editar Alumno';
       idField.value = s.id;
-      document.getElementById('studentName').value     = s.name;
-      document.getElementById('studentLastName').value = s.lastName;
-      document.getElementById('studentPhone').value    = s.phone;
-      document.getElementById('studentEmail').value    = s.email;
-      document.getElementById('studentNotes').value    = s.notes;
+      document.getElementById('studentName').value      = s.name;
+      document.getElementById('studentLastName').value  = s.lastName;
+      document.getElementById('studentPhone').value     = s.phone;
+      document.getElementById('studentEmail').value     = s.email;
+      document.getElementById('studentNotes').value     = s.notes;
+      document.getElementById('studentPackageTotal').value = s.packageTotal || '';
+      document.getElementById('studentPackagePrice').value = s.packagePrice || '';
+      document.getElementById('studentPackageUsed').value  = s.packageUsed  || 0;
+      this._updatePackageResetBtn(s.packageUsed || 0, s.packageTotal || 0);
       this._setGender(s.gender || '');
     } else {
       title.textContent = 'Nuevo Alumno';
@@ -118,6 +135,19 @@ const Students = {
 
     overlay.classList.add('open');
     document.getElementById('studentName').focus();
+  },
+
+  _updatePackageResetBtn(used, total) {
+    const infoEl = document.getElementById('packageUsedInfo');
+    if (infoEl) {
+      if (total > 0) {
+        const remaining = Math.max(0, total - used);
+        infoEl.textContent = `Usadas: ${used} / ${total} — Quedan: ${remaining}`;
+        infoEl.style.display = 'block';
+      } else {
+        infoEl.style.display = 'none';
+      }
+    }
   },
 
   /* ---- Gender toggle helper ---- */
@@ -130,20 +160,23 @@ const Students = {
 
   /* ---- Save student ---- */
   save() {
-    const name     = document.getElementById('studentName').value.trim();
-    const lastName = document.getElementById('studentLastName').value.trim();
-    const phone    = document.getElementById('studentPhone').value.trim();
-    const email    = document.getElementById('studentEmail').value.trim();
-    const notes    = document.getElementById('studentNotes').value.trim();
-    const gender   = document.getElementById('studentGender').value;
-    const id       = document.getElementById('studentFormId').value;
+    const name         = document.getElementById('studentName').value.trim();
+    const lastName     = document.getElementById('studentLastName').value.trim();
+    const phone        = document.getElementById('studentPhone').value.trim();
+    const email        = document.getElementById('studentEmail').value.trim();
+    const notes        = document.getElementById('studentNotes').value.trim();
+    const gender       = document.getElementById('studentGender').value;
+    const id           = document.getElementById('studentFormId').value;
+    const packageTotal = Number(document.getElementById('studentPackageTotal').value) || 0;
+    const packagePrice = Number(document.getElementById('studentPackagePrice').value) || 0;
+    const packageUsed  = Number(document.getElementById('studentPackageUsed').value)  || 0;
 
     if (!name || !lastName) {
       App.showToast('Por favor complete nombre y apellido', 'error');
       return;
     }
 
-    const data = { name, lastName, phone, email, notes, gender };
+    const data = { name, lastName, phone, email, notes, gender, packageTotal, packagePrice, packageUsed };
 
     if (id) {
       Storage.updateStudent(id, data);
@@ -335,5 +368,18 @@ const Students = {
       if (!btn) return;
       this._setGender(btn.dataset.gender);
     });
+
+    // Package reset button
+    const resetPkgBtn = document.getElementById('resetPackageBtn');
+    if (resetPkgBtn) {
+      resetPkgBtn.addEventListener('click', () => {
+        document.getElementById('studentPackageUsed').value = 0;
+        const total = Number(document.getElementById('studentPackageTotal').value) || 0;
+        this._updatePackageResetBtn(0, total);
+        App.showToast('Contador de paquete reiniciado', 'info');
+      });
+    }
   },
 };
+
+window.Students = Students;

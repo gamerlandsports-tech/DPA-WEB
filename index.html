@@ -146,6 +146,10 @@
         <span class="nav-icon">📊</span>
         <span class="nav-label">Estadísticas</span>
       </a>
+      <a href="#" class="nav-item" id="nav-prices" data-section="prices">
+        <span class="nav-icon">💰</span>
+        <span class="nav-label">Precios</span>
+      </a>
       <a href="#" class="nav-item" id="nav-settings" data-section="settings">
         <span class="nav-icon">⚙️</span>
         <span class="nav-label">Configuración</span>
@@ -453,6 +457,65 @@
           <div id="genderStatsContent">
             <p style="color:var(--text-muted); font-size:13px;">Sin datos de género registrados.</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SECTION: PRICES ============ -->
+    <section class="content-section" id="section-prices">
+      <div class="section-header">
+        <h2>Precios por Modalidad</h2>
+      </div>
+      <div class="prices-grid">
+        <div class="settings-card">
+          <h3>💵 Precio Clase Individual</h3>
+          <p class="settings-desc">Valor total de una clase individual (1 persona).</p>
+          <div class="form-group">
+            <label for="priceIndividualPrices">Precio Total</label>
+            <div class="input-prefix">
+              <span class="prefix">$</span>
+              <input type="number" id="priceIndividualPrices" class="form-control" value="0" min="0" />
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>👥 Precios Clase Grupal</h3>
+          <p class="settings-desc">Precio según cantidad de personas en la clase grupal.</p>
+          <div class="grupal-prices" id="grupalPricesGrid">
+            <!-- rendered by JS -->
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>🏫 Precio Academia</h3>
+          <p class="settings-desc">Valor por persona en clase de academia.</p>
+          <div class="form-group">
+            <label for="priceAcademiaPrices">Precio por Persona</label>
+            <div class="input-prefix">
+              <span class="prefix">$</span>
+              <input type="number" id="priceAcademiaPrices" class="form-control" value="0" min="0" />
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>📊 División de Ingresos</h3>
+          <p class="settings-desc">Porcentaje del profesor sobre el total de cada clase.</p>
+          <div class="form-group">
+            <label for="profPercentagePrices">Porcentaje del Profesor (%)</label>
+            <input type="number" id="profPercentagePrices" class="form-control" value="50" min="0" max="100" />
+          </div>
+          <div class="percentage-preview" id="percentagePreviewPrices">
+            <div class="pct-bar">
+              <div class="pct-prof" id="pctProfBarPrices" style="width:50%">Profesor 50%</div>
+              <div class="pct-club" id="pctClubBarPrices" style="width:50%">Club 50%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="prices-save-row">
+          <button class="btn btn-primary" id="savePricesBtn">💾 Guardar Precios</button>
         </div>
       </div>
     </section>
@@ -779,6 +842,28 @@
           <label for="studentNotes">Notas</label>
           <textarea id="studentNotes" class="form-control" rows="3" placeholder="Observaciones, nivel de juego, etc."></textarea>
         </div>
+
+        <!-- PACKAGE SECTION -->
+        <div class="package-section">
+          <h4 class="package-section-title">📦 Paquete de Clases</h4>
+          <p class="settings-desc">Si el alumno compra un paquete de clases con precio especial, configúralo aquí.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="studentPackageTotal">Clases en el paquete</label>
+              <input type="number" id="studentPackageTotal" class="form-control" placeholder="Ej: 10" min="0" />
+            </div>
+            <div class="form-group">
+              <label for="studentPackagePrice">Precio por clase del paquete</label>
+              <div class="input-prefix">
+                <span class="prefix">$</span>
+                <input type="number" id="studentPackagePrice" class="form-control" placeholder="Ej: 5000" min="0" />
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="studentPackageUsed" value="0" />
+          <div id="packageUsedInfo" class="package-used-info" style="display:none"></div>
+          <button type="button" class="btn btn-ghost btn-sm" id="resetPackageBtn" style="margin-top:8px;">🔄 Reiniciar contador de clases usadas</button>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" id="studentFormCancel">Cancelar</button>
@@ -904,17 +989,18 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <!-- App Modules -->
-  <script src="js/firebase-config.js?v=5"></script>
-  <script src="js/cloud-sync.js?v=5"></script>
-  <script src="js/utils.js?v=5"></script>
-  <script src="js/storage.js?v=5"></script>
-  <script src="js/teachers.js?v=5"></script>
-  <script src="js/students.js?v=5"></script>
-  <script src="js/classes.js?v=5"></script>
-  <script src="js/calendar.js?v=5"></script>
-  <script src="js/stats.js?v=5"></script>
-  <script src="js/auth-new.js"></script>
-  <script src="js/app.js?v=5"></script>
+  <script src="js/firebase-config.js?v=6"></script>
+  <script src="js/cloud-sync.js?v=6"></script>
+  <script src="js/utils.js?v=6"></script>
+  <script src="js/storage.js?v=6"></script>
+  <script src="js/teachers.js?v=6"></script>
+  <script src="js/students.js?v=6"></script>
+  <script src="js/classes.js?v=6"></script>
+  <script src="js/calendar.js?v=6"></script>
+  <script src="js/stats.js?v=6"></script>
+  <script src="js/prices.js?v=6"></script>
+  <script src="js/auth-new.js?v=6"></script>
+  <script src="js/app.js?v=6"></script>
 
 </body>
 </html>

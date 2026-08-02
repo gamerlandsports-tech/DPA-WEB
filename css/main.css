@@ -1502,3 +1502,128 @@ body.session-admin .admin-badge { display: inline-flex; }
 
 /* Global Utility: Hidden */
 .hidden { display: none !important; }
+
+/* ============================================================
+   PRICES SECTION
+   ============================================================ */
+.prices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+.prices-save-row {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+/* ============================================================
+   PACKAGE SECTION (Student Form)
+   ============================================================ */
+.package-section {
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  background: rgba(245,158,11,0.04);
+}
+.package-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f59e0b;
+  margin: 0 0 6px;
+}
+.package-used-info {
+  font-size: 12.5px;
+  color: var(--accent);
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+/* ============================================================
+   STUDENT CARD — Package Badge
+   ============================================================ */
+.student-package-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 4px 10px;
+  margin-top: 8px;
+  display: inline-block;
+  letter-spacing: 0.02em;
+}
+.student-package-badge.pkg-active {
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.35);
+  color: #f59e0b;
+}
+.student-package-badge.pkg-done {
+  background: rgba(100,116,139,0.15);
+  border: 1px solid rgba(100,116,139,0.25);
+  color: var(--text-secondary);
+}
+
+/* ============================================================
+   CLASS FORM — Student Tag with Package Info
+   ============================================================ */
+.student-tag {
+  display: flex;
+  flex-direction: column;
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: 10px;
+  padding: 0;
+  overflow: hidden;
+}
+.student-tag-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.class-pkg-info {
+  padding: 8px 12px 10px;
+  font-size: 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.class-pkg-info.pkg-active {
+  background: rgba(245,158,11,0.08);
+  border-top-color: rgba(245,158,11,0.2);
+  color: #fbbf24;
+}
+.class-pkg-info.pkg-done {
+  background: rgba(100,116,139,0.08);
+  color: var(--text-secondary);
+}
+.pkg-icon { font-size: 14px; margin-right: 4px; }
+.pkg-text { font-weight: 500; }
+.pkg-bar-wrap {
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+  margin: 6px 0 4px;
+  overflow: hidden;
+}
+.pkg-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+.pkg-price-tag {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #f59e0b;
+  margin-top: 2px;
+}

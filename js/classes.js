@@ -415,12 +415,32 @@ const Classes = {
 
   _renderSelectedStudents() {
     const container = document.getElementById('selectedStudents');
-    container.innerHTML = this._selectedStudents.map(s => `
-      <div class="student-tag">
-        ${Utils.fullName(s.name, s.lastName)}
-        <button class="tag-remove" data-student-id="${s.id}">×</button>
-      </div>
-    `).join('');
+    container.innerHTML = this._selectedStudents.map(s => {
+      const pkg = Storage.getStudentPackageStatus(s.id);
+      let pkgHtml = '';
+      if (pkg.total > 0) {
+        if (pkg.isActive) {
+          const pct = Math.round((pkg.used / pkg.total) * 100);
+          pkgHtml = `
+            <div class="class-pkg-info pkg-active">
+              <span class="pkg-icon">📦</span>
+              <span class="pkg-text">Paquete: <strong>${pkg.used}</strong> usadas / <strong>${pkg.total}</strong> total &mdash; Quedan <strong>${pkg.remaining}</strong></span>
+              <div class="pkg-bar-wrap"><div class="pkg-bar-fill" style="width:${pct}%"></div></div>
+              <span class="pkg-price-tag">${Utils.formatCurrency(pkg.price)} / clase (paquete)</span>
+            </div>`;
+        } else {
+          pkgHtml = `<div class="class-pkg-info pkg-done"><span class="pkg-icon">📦</span> Paquete completado &mdash; se aplica precio normal</div>`;
+        }
+      }
+      return `
+        <div class="student-tag">
+          <div class="student-tag-main">
+            ${Utils.fullName(s.name, s.lastName)}
+            <button class="tag-remove" data-student-id="${s.id}">&times;</button>
+          </div>
+          ${pkgHtml}
+        </div>`;
+    }).join('');
 
     container.querySelectorAll('.tag-remove').forEach(btn => {
       btn.addEventListener('click', () => this._removeStudent(btn.dataset.studentId));
@@ -473,8 +493,33 @@ const Classes = {
         prof: Math.round(total * profPct),
         club: total - Math.round(total * profPct),
       };
-    } else if (tipo) {
-      calc = Utils.calcValue(tipo, persons, settings);
+    } else {
+      // Check if any selected student has an active package
+      const pkgStudent = this._selectedStudents.find(s => {
+        const pkg = Storage.getStudentPackageStatus(s.id);
+        return pkg.isActive;
+      });
+
+      if (pkgStudent && !tipo) {
+        // Package price preview without tipo
+        const pkg = Storage.getStudentPackageStatus(pkgStudent.id);
+        const profPct = (settings.profPercentage || 50) / 100;
+        calc = {
+          total: pkg.price,
+          prof: Math.round(pkg.price * profPct),
+          club: pkg.price - Math.round(pkg.price * profPct),
+        };
+      } else if (pkgStudent && tipo) {
+        const pkg = Storage.getStudentPackageStatus(pkgStudent.id);
+        const profPct = (settings.profPercentage || 50) / 100;
+        calc = {
+          total: pkg.price,
+          prof: Math.round(pkg.price * profPct),
+          club: pkg.price - Math.round(pkg.price * profPct),
+        };
+      } else if (tipo) {
+        calc = Utils.calcValue(tipo, persons, settings);
+      }
     }
 
     this._setEl('vpTotal', Utils.formatCurrency(calc.total));
@@ -530,7 +575,22 @@ const Classes = {
         club: total - Math.round(total * profPct),
       };
     } else {
-      calc = Utils.calcValue(tipo, persons, settings);
+      // Check for active package on any selected student
+      const pkgStudent = this._selectedStudents.find(s => {
+        const pkg = Storage.getStudentPackageStatus(s.id);
+        return pkg.isActive;
+      });
+      if (pkgStudent) {
+        const pkg = Storage.getStudentPackageStatus(pkgStudent.id);
+        const profPct = (settings.profPercentage || 50) / 100;
+        calc = {
+          total: pkg.price,
+          prof: Math.round(pkg.price * profPct),
+          club: pkg.price - Math.round(pkg.price * profPct),
+        };
+      } else {
+        calc = Utils.calcValue(tipo, persons, settings);
+      }
     }
 
     const activeTeacherId = Storage.getActiveTeacherId();
@@ -557,6 +617,13 @@ const Classes = {
       App.showToast('Clase actualizada', 'success');
     } else {
       Storage.addClass(data);
+      // Increment package usage for students with active packages
+      this._selectedStudents.forEach(s => {
+        const pkg = Storage.getStudentPackageStatus(s.id);
+        if (pkg.isActive) {
+          Storage.incrementPackageUsed(s.id);
+        }
+      });
       App.showToast('Clase registrada exitosamente', 'success');
     }
 

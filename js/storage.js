@@ -194,6 +194,9 @@ const Storage = {
       email: data.email || '',
       notes: data.notes || '',
       gender: data.gender || '',
+      packageTotal: Number(data.packageTotal) || 0,
+      packagePrice: Number(data.packagePrice) || 0,
+      packageUsed:  Number(data.packageUsed)  || 0,
       createdAt: new Date().toISOString(),
     };
     students.push(student);
@@ -220,6 +223,30 @@ const Storage = {
 
   getStudent(id) {
     return this.getStudents().find(s => s.id === id) || null;
+  },
+
+  /* ----------------------------------------------------------------
+     PACKAGE HELPERS
+     ---------------------------------------------------------------- */
+  getStudentPackageStatus(studentId) {
+    const s = this.getStudent(studentId);
+    if (!s) return { total: 0, used: 0, remaining: 0, isActive: false, price: 0 };
+    const total     = Number(s.packageTotal) || 0;
+    const price     = Number(s.packagePrice) || 0;
+    const used      = Number(s.packageUsed)  || 0;
+    const remaining = Math.max(0, total - used);
+    const isActive  = total > 0 && remaining > 0;
+    return { total, used, remaining, isActive, price };
+  },
+
+  incrementPackageUsed(studentId) {
+    const s = this.getStudent(studentId);
+    if (!s) return;
+    const total = Number(s.packageTotal) || 0;
+    const used  = Number(s.packageUsed)  || 0;
+    if (total > 0 && used < total) {
+      this.updateStudent(studentId, { packageUsed: used + 1 });
+    }
   },
 
   /**
