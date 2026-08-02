@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    DPA — alarm.js — Motor de Alarmas, Vibración y Notificaciones
    ============================================================ */
 
@@ -109,16 +109,21 @@ const AlarmEngine = {
   },
 
   /* ================================================================
-     PUSH NOTIFICATION
+     PUSH NOTIFICATION & WHATSAPP TRIGGER
      ================================================================ */
-  sendNotification(title, message) {
+  sendNotification(title, message, waUrl = null) {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       try {
-        new Notification(title, {
+        const notif = new Notification(title, {
           body: message,
           icon: '🎾',
           requireInteraction: true
         });
+        if (waUrl) {
+          notif.onclick = () => {
+            window.open(waUrl, '_blank');
+          };
+        }
       } catch (e) {
         console.warn('AlarmEngine: Error en notificación push:', e);
       }
@@ -130,7 +135,7 @@ const AlarmEngine = {
      ================================================================ */
   startChecking() {
     if (this._timer) clearInterval(this._timer);
-    this._timer = setInterval(() => this.checkSchedule(), 20000); // Check every 20 seconds
+    this._timer = setInterval(() => this.checkSchedule(), 15000); // Check every 15 seconds
     this.checkSchedule();
   },
 
@@ -140,7 +145,7 @@ const AlarmEngine = {
     const todayStr = Utils.toISO(new Date());
     const todayClasses = Storage.getClassesByDate(todayStr)
       .filter(c => c.status !== 'cancelled' && c.time)
-      .sort((a, b) => a.time.localeCompare(b.time));
+      .sort((a, b) => Utils.timeToMinutes(a.time) - Utils.timeToMinutes(b.time));
 
     if (todayClasses.length === 0) return;
 
@@ -151,8 +156,7 @@ const AlarmEngine = {
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
     targetedClasses.forEach(cls => {
-      const [h, m] = cls.time.split(':').map(Number);
-      const classMinutes = h * 60 + m;
+      const classMinutes = Utils.timeToMinutes(cls.time);
       const diffMinutes = classMinutes - currentMinutes;
 
       // Check windows: 30 min, 20 min, 10 min
@@ -180,10 +184,10 @@ const AlarmEngine = {
     // 1. First class of the day
     targeted.push(classes[0]);
 
-    // 2. First class of the afternoon (>= 12:00 or 13:00)
+    // 2. First class of the afternoon (>= 12:00 / 720 mins)
     const afternoonClass = classes.find(c => {
-      const h = parseInt(c.time.split(':')[0]) || 0;
-      return h >= 13;
+      const mins = Utils.timeToMinutes(c.time);
+      return mins >= 720;
     });
     if (afternoonClass && !targeted.some(c => c.id === afternoonClass.id)) {
       targeted.push(afternoonClass);
@@ -194,9 +198,11 @@ const AlarmEngine = {
       const prev = classes[i - 1];
       const curr = classes[i];
 
-      const prevDuration = prev.tipo === 'academia' ? 90 : 60;
-      const prevEndMinutes = pH * 60 + pM + prevDuration;
-      const currStartMinutes = cH * 60 + cM;
+      const prevStartMins = Utils.timeToMinutes(prev.time);
+      const prevDuration  = prev.tipo === 'academia' ? 90 : 60;
+      const prevEndMinutes = prevStartMins + prevDuration;
+
+      const currStartMinutes = Utils.timeToMinutes(curr.time);
 
       if (currStartMinutes - prevEndMinutes >= 60) {
         if (!targeted.some(c => c.id === curr.id)) {
@@ -215,16 +221,24 @@ const AlarmEngine = {
     // 2. Mobile vibration
     this.vibrate();
 
-    // 3. Notification
+    // 3. Prepare Notification & WhatsApp link
     const students = (cls.studentIds || [])
       .map(id => Storage.getStudent(id))
       .filter(Boolean);
     const studentNames = students.map(s => Utils.fullName(s.name, s.lastName)).join(', ') || 'Alumnos';
 
-    const title = `⏰ ¡Alerta de Clase (${windowMins} min)!`;
-    const message = `La clase de las ${cls.time} hs (${studentNames}) empieza en ${windowMins} minutos.`;
+    let waUrl = null;
+    const studentWithPhone = students.find(s => s.phone && s.phone.trim());
+    if (studentWithPhone) {
+      const cleanPhone = studentWithPhone.phone.replace(/[^0-9]/g, '');
+      const msg = encodeURIComponent(`Hola ${studentWithPhone.name}! Recordatorio de DPA: Tu clase de pádel a las ${cls.time} hs empieza en ${windowMins} minutos. ¡Te esperamos!`);
+      waUrl = `https://wa.me/${cleanPhone}?text=${msg}`;
+    }
 
-    this.sendNotification(title, message);
+    const title = `⏰ ¡Alerta de Clase (${windowMins} min)!`;
+    const message = `La clase de las ${cls.time} hs (${studentNames}) empieza en ${windowMins} minutos. Hacé clic para abrir WhatsApp.`;
+
+    this.sendNotification(title, message, waUrl);
 
     if (typeof App !== 'undefined' && App.showToast) {
       App.showToast(`⏰ Alarma: Clase de ${cls.time} hs empieza en ${windowMins} min`, 'error');
@@ -238,8 +252,7 @@ const AlarmEngine = {
 
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    const [h, m] = cls.time.split(':').map(Number);
-    const classMinutes = h * 60 + m;
+    const classMinutes = Utils.timeToMinutes(cls.time);
 
     const diff = classMinutes - currentMinutes;
     return diff >= 0 && diff <= 30;
