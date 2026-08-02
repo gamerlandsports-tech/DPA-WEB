@@ -478,6 +478,17 @@
             <p style="color:var(--text-muted); font-size:13px;">Sin datos de género registrados.</p>
           </div>
         </div>
+
+        <!-- Club Advances section -->
+        <div class="stats-section full-width">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px">
+            <h3 style="margin:0">💸 Adelantos y Entregas del Club</h3>
+            <button class="btn btn-primary btn-sm" id="btnAddAdvance">💸 + Registrar Adelanto</button>
+          </div>
+          <div id="advancesListContent">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1161,6 +1172,48 @@
       <div class="modal-footer">
         <button class="btn btn-ghost" id="changePassCancel">Cancelar</button>
         <button class="btn btn-primary" id="changePassSave">💾 Guardar Contraseña</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: ADVANCE FORM (ADELANTO CLUB) ============ -->
+  <div class="modal-overlay" id="advanceFormOverlay">
+    <div class="modal modal-small" id="advanceFormModal">
+      <div class="modal-header">
+        <h3 id="advanceFormTitle">💸 Registrar Adelanto del Club</h3>
+        <button class="modal-close" id="advanceFormClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="advanceFormId" />
+
+        <div class="form-group">
+          <label for="advanceAmount">Monto Entregado ($) <span class="required">*</span></label>
+          <div class="input-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="advanceAmount" class="form-control" placeholder="Ej: 15000" min="0" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="advanceDate">Fecha de Entrega</label>
+          <input type="date" id="advanceDate" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="advanceTeacher">Profesor Destinatario</label>
+          <select id="advanceTeacher" class="form-control">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="advanceNote">Concepto / Detalle (Opcional)</label>
+          <input type="text" id="advanceNote" class="form-control" placeholder="Ej: Adelanto de efectivo semana 1" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="advanceFormCancel">Cancelar</button>
+        <button class="btn btn-primary" id="advanceFormSave">💾 Guardar Adelanto</button>
       </div>
     </div>
   </div>

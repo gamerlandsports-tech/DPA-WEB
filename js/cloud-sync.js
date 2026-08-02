@@ -25,6 +25,7 @@ const CloudSync = {
     CLASSES:  'dpa/data/classes',
     SETTINGS: 'dpa/data/settings',
     TOURNAMENTS: 'dpa/data/tournaments',
+    ADVANCES: 'dpa/data/advances',
   },
 
   /* ================================================================
@@ -123,6 +124,7 @@ const CloudSync = {
         this._pullCollection('STUDENTS', Storage.KEYS.STUDENTS),
         this._pullCollection('CLASSES',  Storage.KEYS.CLASSES),
         this._pullCollection('TOURNAMENTS', Storage.KEYS.TOURNAMENTS),
+        this._pullCollection('ADVANCES', Storage.KEYS.ADVANCES),
         this._pullSettings(),
       ];
       await Promise.all(promises);

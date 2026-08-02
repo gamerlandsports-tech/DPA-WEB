@@ -19,10 +19,34 @@ const Stats = {
     this._renderTypeBars(stats.classes);
     this._renderRanking(stats.classes);
     this._renderGenderStats(stats.classes);
+    this._renderAdvancesList();
+  },
+
+  _getAdvancesForMonth(year, month) {
+    const activeProfId = (typeof Auth !== 'undefined' && Auth.isProfessor()) ? Auth.getCurrentProfessorId() : null;
+    return Storage.getAdvances().filter(a => {
+      if (!a.date) return false;
+      const d = Utils.fromISO(a.date);
+      const matchesMonth = d.getFullYear() === year && d.getMonth() === month;
+      if (!matchesMonth) return false;
+      if (activeProfId) return String(a.teacherId) === String(activeProfId);
+      return true;
+    });
   },
 
   _renderCards(stats) {
     const container = document.getElementById('statsCards');
+
+    // Filter ONLY completed classes for REAL financial generation
+    const completedClasses = stats.classes.filter(c => c.status === 'completed');
+    const realIngresos = completedClasses.reduce((s, c) => s + (c.value || 0), 0);
+    const realProf     = completedClasses.reduce((s, c) => s + (c.profCut || 0), 0);
+
+    const advances = this._getAdvancesForMonth(this._year, this._month);
+    const totalAdvances = advances.reduce((s, a) => s + (a.amount || 0), 0);
+
+    const netBalance = realProf - totalAdvances;
+
     container.innerHTML = `
       <div class="stat-card">
         <div class="stat-val">${stats.total}</div>
@@ -41,14 +65,77 @@ const Stats = {
         <div class="stat-label">Pendientes</div>
       </div>
       <div class="stat-card">
-        <div class="stat-val" style="color:var(--accent)">${Utils.formatCurrency(stats.totalValue)}</div>
-        <div class="stat-label">Ingresos totales</div>
+        <div class="stat-val" style="color:var(--accent)">${Utils.formatCurrency(realIngresos)}</div>
+        <div class="stat-label">💵 Ingreso Real (Completadas)</div>
       </div>
       <div class="stat-card">
-        <div class="stat-val" style="color:var(--green)">${Utils.formatCurrency(stats.totalProf)}</div>
-        <div class="stat-label">Ganancia profesor</div>
+        <div class="stat-val" style="color:var(--text-secondary)">${Utils.formatCurrency(stats.totalValue)}</div>
+        <div class="stat-label">📅 Ingreso Proyectado (Reservas)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--green)">${Utils.formatCurrency(realProf)}</div>
+        <div class="stat-label">📊 Ganancia Real Profesor</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--red)">-${Utils.formatCurrency(totalAdvances)}</div>
+        <div class="stat-label">💸 Adelantos Entregados Club</div>
+      </div>
+      <div class="stat-card" style="border:2px solid var(--accent); background:rgba(34,197,94,0.06)">
+        <div class="stat-val" style="color:var(--accent); font-size:22px">${Utils.formatCurrency(netBalance)}</div>
+        <div class="stat-label" style="color:var(--accent); font-weight:800">💵 Saldo Neto a Cobrar (Profe)</div>
       </div>
     `;
+  },
+
+  _renderAdvancesList() {
+    const container = document.getElementById('advancesListContent');
+    if (!container) return;
+
+    const advances = this._getAdvancesForMonth(this._year, this._month);
+
+    if (advances.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-muted); font-size:13px; padding:12px 0;">No hay adelantos o entregas registradas en este mes.</p>';
+      return;
+    }
+
+    let html = `
+      <div class="table-container" style="margin-top:8px">
+        <table class="classes-table" style="width:100%">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Profesor</th>
+              <th>Concepto / Detalle</th>
+              <th>Monto Entregado</th>
+              <th style="text-align:right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    advances.forEach(a => {
+      const prof = Storage.getTeacher(a.teacherId);
+      const profName = prof ? Utils.fullName(prof.name, prof.lastName) : 'General';
+      html += `
+        <tr>
+          <td>${Utils.formatShort(a.date)}</td>
+          <td><strong>${profName}</strong></td>
+          <td>${a.note || '<span style="opacity:0.5">-</span>'}</td>
+          <td style="color:var(--red); font-weight:800">-${Utils.formatCurrency(a.amount)}</td>
+          <td style="text-align:right">
+            <button class="btn-delete-class" onclick="Stats.deleteAdvance('${a.id}')" title="Eliminar Adelanto">🗑</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    container.innerHTML = html;
   },
 
   _renderTypeBars(classes) {
@@ -186,6 +273,70 @@ const Stats = {
     `;
   },
 
+  openAdvanceForm() {
+    const overlay = document.getElementById('advanceFormOverlay');
+    const amount  = document.getElementById('advanceAmount');
+    const date    = document.getElementById('advanceDate');
+    const teacher = document.getElementById('advanceTeacher');
+    const note    = document.getElementById('advanceNote');
+
+    if (amount)  amount.value = '';
+    if (date)    date.value = Utils.toISO(new Date());
+    if (note)    note.value = '';
+
+    if (teacher) {
+      teacher.innerHTML = '';
+      const teachers = Storage.getTeachers();
+      teachers.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = Utils.fullName(t.name, t.lastName);
+        if (t.id === Storage.getActiveTeacherId()) opt.selected = true;
+        teacher.appendChild(opt);
+      });
+    }
+
+    if (overlay) overlay.classList.add('open');
+  },
+
+  saveAdvance() {
+    const amount    = document.getElementById('advanceAmount').value;
+    const date      = document.getElementById('advanceDate').value;
+    const teacherId = document.getElementById('advanceTeacher').value;
+    const note      = document.getElementById('advanceNote').value.trim();
+
+    if (!amount || Number(amount) <= 0) {
+      App.showToast('Por favor ingrese un monto de adelanto válido', 'error');
+      return;
+    }
+
+    Storage.addAdvance({
+      amount: Number(amount),
+      date: date || Utils.toISO(new Date()),
+      teacherId,
+      note,
+    });
+
+    App.showToast('💸 Adelanto del club registrado exitosamente', 'success');
+
+    const overlay = document.getElementById('advanceFormOverlay');
+    if (overlay) overlay.classList.remove('open');
+
+    this.render(this._year, this._month);
+  },
+
+  deleteAdvance(id) {
+    App.confirm(
+      '¿Eliminar este adelanto?',
+      'Se removerá el registro del adelanto permanentemente.',
+      () => {
+        Storage.deleteAdvance(id);
+        App.showToast('Adelanto eliminado', 'info');
+        this.render(this._year, this._month);
+      }
+    );
+  },
+
   init() {
     document.getElementById('statsMonthPrev').addEventListener('click', () => {
       if (this._month === 0) { this._month = 11; this._year--; }
@@ -197,5 +348,22 @@ const Stats = {
       else { this._month++; }
       this.render(this._year, this._month);
     });
+
+    const btnAdd = document.getElementById('btnAddAdvance');
+    if (btnAdd) btnAdd.addEventListener('click', () => this.openAdvanceForm());
+
+    const btnSave = document.getElementById('advanceFormSave');
+    if (btnSave) btnSave.addEventListener('click', () => this.saveAdvance());
+
+    ['advanceFormClose', 'advanceFormCancel'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          document.getElementById('advanceFormOverlay').classList.remove('open');
+        });
+      }
+    });
   },
 };
+
+window.Stats = Stats;

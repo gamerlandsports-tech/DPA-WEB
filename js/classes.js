@@ -220,16 +220,21 @@ const Classes = {
   _updateMonthTotals(year, month) {
     const stats = Storage.getMonthStats(year, month);
 
+    const completedClasses = stats.classes.filter(c => c.status === 'completed');
+    const realValue = completedClasses.reduce((s, c) => s + (c.value || 0), 0);
+    const realProf  = completedClasses.reduce((s, c) => s + (c.profCut || 0), 0);
+    const realClub  = completedClasses.reduce((s, c) => s + (c.clubCut || 0), 0);
+
     this._setEl('secTotalClases',  stats.total);
     this._setEl('secCompletadas',  stats.completed);
     this._setEl('secCanceladas',   stats.cancelled);
-    this._setEl('secIngresos',     Utils.formatCurrency(stats.totalValue));
-    this._setEl('secProf',         Utils.formatCurrency(stats.totalProf));
-    this._setEl('secClub',         Utils.formatCurrency(stats.totalClub));
+    this._setEl('secIngresos',     Utils.formatCurrency(realValue));
+    this._setEl('secProf',         Utils.formatCurrency(realProf));
+    this._setEl('secClub',         Utils.formatCurrency(realClub));
 
-    this._setEl('secTotValor',     Utils.formatCurrency(stats.totalValue));
-    this._setEl('secTotProf',      Utils.formatCurrency(stats.totalProf));
-    this._setEl('secTotClub',      Utils.formatCurrency(stats.totalClub));
+    this._setEl('secTotValor',     Utils.formatCurrency(realValue));
+    this._setEl('secTotProf',      Utils.formatCurrency(realProf));
+    this._setEl('secTotClub',      Utils.formatCurrency(realClub));
     this._setEl('secTotCompleted', `✓ ${stats.completed}`);
     this._setEl('secTotCancelled', `✗ ${stats.cancelled}`);
     this._setEl('secTotPending',   `⏳ ${stats.pending}`);

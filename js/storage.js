@@ -13,6 +13,7 @@ const Storage = {
     SETTINGS:  'dpa_settings',
     ACTIVE_TEACHER: 'dpa_active_teacher',
     TOURNAMENTS: 'dpa_tournaments',
+    ADVANCES:    'dpa_advances',
   },
 
   /* ---- Default Settings ---- */
@@ -466,6 +467,39 @@ const Storage = {
     const tournaments = this.getTournaments().filter(t => String(t.id) !== String(id));
     this.saveTournaments(tournaments);
     if (typeof CloudSync !== 'undefined') CloudSync.delete('TOURNAMENTS', id);
+  },
+
+  /* ================================================================
+     ADVANCES (Adelantos del Club a Profesores)
+     ================================================================ */
+  getAdvances() {
+    return this._get(this.KEYS.ADVANCES) || [];
+  },
+
+  saveAdvances(advances) {
+    this._set(this.KEYS.ADVANCES, advances);
+    if (typeof CloudSync !== 'undefined') CloudSync.pushAll();
+  },
+
+  addAdvance(data) {
+    const advances = this.getAdvances();
+    const newAdv = {
+      id: Utils.uid(),
+      amount: Number(data.amount) || 0,
+      date: data.date || Utils.toISO(new Date()),
+      note: data.note || '',
+      teacherId: data.teacherId || Storage.getActiveTeacherId(),
+      createdAt: new Date().toISOString(),
+    };
+    advances.push(newAdv);
+    this.saveAdvances(advances);
+    return newAdv;
+  },
+
+  deleteAdvance(id) {
+    let advances = this.getAdvances();
+    advances = advances.filter(a => String(a.id) !== String(id));
+    this.saveAdvances(advances);
   },
 };
 
