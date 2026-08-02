@@ -392,3 +392,65 @@
   border: 1px solid rgba(100, 116, 139, 0.25);
   color: var(--text-secondary);
 }
+
+/* ============================================================
+   ALARM CLOCK MODAL (DESPERTADOR)
+   ============================================================ */
+.alarm-clock-modal {
+  text-align: center;
+  border: 3px solid #ef4444 !important;
+  background: #0f172a !important;
+  box-shadow: 0 0 50px rgba(239, 68, 68, 0.6) !important;
+  animation: alarmModalPulse 1s infinite alternate;
+}
+@keyframes alarmModalPulse {
+  0% { transform: scale(1); box-shadow: 0 0 30px rgba(239, 68, 68, 0.5); }
+  100% { transform: scale(1.02); box-shadow: 0 0 70px rgba(239, 68, 68, 0.9); }
+}
+.alarm-clock-icon-wrap {
+  margin-bottom: 12px;
+}
+.alarm-clock-icon {
+  font-size: 54px;
+  display: inline-block;
+  animation: alarmBellRing 0.4s infinite alternate;
+}
+@keyframes alarmBellRing {
+  0% { transform: rotate(-15deg); }
+  100% { transform: rotate(15deg); }
+}
+.alarm-clock-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ef4444;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+}
+.alarm-clock-msg {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+.alarm-clock-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.btn-stop-alarm {
+  background: #ef4444 !important;
+  color: #fff !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  padding: 16px 24px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.btn-stop-alarm:hover {
+  background: #dc2626 !important;
+  transform: scale(1.03);
+}
+

@@ -214,14 +214,68 @@ const AlarmEngine = {
     return targeted;
   },
 
-  triggerAlarm(cls, windowMins) {
-    // 1. Audio sound
+  /* ================================================================
+     CONTINUOUS ALARM SOUND & VIBRATION LOOP (DESPERTADOR)
+     ================================================================ */
+  startContinuousAlarm(title, message, waUrl = null) {
+    this.stopAlarm(); // Stop any previous alarm loop
+
+    this.isPlaying = true;
+
+    // 1. Play sound immediately and repeat every 1200ms
     this.playAlarmSound();
+    this._soundLoopTimer = setInterval(() => {
+      if (this.isPlaying) this.playAlarmSound();
+    }, 1200);
 
-    // 2. Mobile vibration
+    // 2. Vibrate immediately and repeat every 2000ms
     this.vibrate();
+    this._vibrateLoopTimer = setInterval(() => {
+      if (this.isPlaying) this.vibrate();
+    }, 2000);
 
-    // 3. Prepare Notification & WhatsApp link for ACTIVE PROFESSOR
+    // 3. Show Alarm Clock Modal
+    const overlay = document.getElementById('alarmClockOverlay');
+    const titleEl = document.getElementById('alarmClockTitle');
+    const msgEl   = document.getElementById('alarmClockMessage');
+    const waBtn   = document.getElementById('alarmClockWaBtn');
+
+    if (titleEl) titleEl.textContent = title || '¡ALARMA DE CLASE!';
+    if (msgEl)   msgEl.textContent = message || 'Una clase de pádel está por comenzar.';
+
+    if (waBtn) {
+      if (waUrl) {
+        waBtn.href = waUrl;
+        waBtn.style.display = 'inline-flex';
+      } else {
+        waBtn.style.display = 'none';
+      }
+    }
+
+    if (overlay) overlay.classList.add('open');
+  },
+
+  stopAlarm() {
+    this.isPlaying = false;
+    if (this._soundLoopTimer) {
+      clearInterval(this._soundLoopTimer);
+      this._soundLoopTimer = null;
+    }
+    if (this._vibrateLoopTimer) {
+      clearInterval(this._vibrateLoopTimer);
+      this._vibrateLoopTimer = null;
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try { navigator.vibrate(0); } catch (e) {}
+    }
+
+    const overlay = document.getElementById('alarmClockOverlay');
+    if (overlay) overlay.classList.remove('open');
+  },
+
+  triggerAlarm(cls, windowMins) {
+    // Prepare Notification & WhatsApp link for ACTIVE PROFESSOR
     const activeProfId = Storage.getActiveTeacherId();
     const prof = activeProfId ? Storage.getTeacher(activeProfId) : null;
     const profName = prof ? Utils.fullName(prof.name, prof.lastName) : 'Profesor';
@@ -239,9 +293,13 @@ const AlarmEngine = {
     }
 
     const title = `⏰ Alerta Profe ${profName} (${windowMins} min)`;
-    const message = `La clase de las ${cls.time} hs con ${studentNames} empieza en ${windowMins} minutos. Hacé clic para avisar al Profe por WhatsApp.`;
+    const message = `La clase de las ${cls.time} hs con ${studentNames} empieza en ${windowMins} minutos.`;
 
-    this.sendNotification(title, message, profWaUrl);
+    // Start continuous audio/vibration alarm loop & modal popup
+    this.startContinuousAlarm(title, message, profWaUrl);
+
+    // Send push notification
+    this.sendNotification(title, message + ' Hacé clic para abrir WhatsApp.', profWaUrl);
 
     if (typeof App !== 'undefined' && App.showToast) {
       App.showToast(`⏰ Alarma Profe ${profName}: Clase de ${cls.time} hs en ${windowMins} min`, 'error');

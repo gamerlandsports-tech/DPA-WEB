@@ -1119,6 +1119,26 @@
     </div>
   </div>
 
+  <!-- ============ MODAL: ALARM CLOCK (DESPERTADOR) ============ -->
+  <div class="modal-overlay" id="alarmClockOverlay" style="z-index: 10000;">
+    <div class="modal modal-small alarm-clock-modal" id="alarmClockModal">
+      <div class="alarm-clock-icon-wrap">
+        <div class="alarm-clock-icon">⏰</div>
+      </div>
+      <h2 id="alarmClockTitle" class="alarm-clock-title">¡ALARMA DE CLASE!</h2>
+      <p id="alarmClockMessage" class="alarm-clock-msg">La clase está por comenzar.</p>
+      
+      <div class="alarm-clock-actions">
+        <button type="button" class="btn btn-danger btn-lg btn-stop-alarm" onclick="AlarmEngine.stopAlarm()">
+          🛑 DETENER ALARMA
+        </button>
+        <a id="alarmClockWaBtn" href="#" target="_blank" rel="noopener" class="btn-whatsapp" style="display:none; justify-content:center; padding:12px 18px; font-size:14px">
+          💬 Abrir WhatsApp Profe
+        </a>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ TOAST NOTIFICATIONS ============ -->
   <div class="toast-container" id="toastContainer"></div>
 
