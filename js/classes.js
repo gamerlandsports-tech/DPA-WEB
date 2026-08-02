@@ -131,9 +131,20 @@ const Classes = {
       `;
     }
 
+    let waBtn = '';
+    const studentWithPhone = students.find(s => s.phone && s.phone.trim());
+    if (studentWithPhone) {
+      const cleanPhone = studentWithPhone.phone.replace(/[^0-9]/g, '');
+      const msg = encodeURIComponent(`Hola ${studentWithPhone.name}! Recordatorio de DPA: Tenés clase hoy a las ${cls.time} hs. ¡Te esperamos!`);
+      waBtn = `<a href="https://wa.me/${cleanPhone}?text=${msg}" target="_blank" rel="noopener" class="btn-whatsapp" title="Enviar recordatorio por WhatsApp">💬 WhatsApp</a>`;
+    }
+
+    const isUpcoming = typeof AlarmEngine !== 'undefined' && AlarmEngine.isUpcomingAlert(cls);
+
     const statusClass = [
       cls.status === 'completed' ? 'row-completed' : cls.status === 'cancelled' ? 'row-cancelled' : '',
-      cls.isManualPrice ? 'row-manual-price' : ''
+      cls.isManualPrice ? 'row-manual-price' : '',
+      isUpcoming ? 'row-upcoming-alert' : ''
     ].filter(Boolean).join(' ');
 
     const manualBadge = cls.isManualPrice
@@ -155,7 +166,7 @@ const Classes = {
       <td class="cell-club">${Utils.formatCurrency(cls.clubCut)}</td>
       <td class="cell-factura">${cls.invoiceNumber || '-'}</td>
       <td>${cls.paymentMethod ? `<span class="pago-badge">${pagoLabels[cls.paymentMethod] || cls.paymentMethod}</span>` : '-'}</td>
-      <td><div class="estado-cell">${statusHtml}</div></td>
+      <td><div class="estado-cell">${statusHtml} ${waBtn}</div></td>
       <td>
         <div class="action-btns">
           <button class="btn-edit-class" data-action="edit-class" data-id="${cls.id}" title="Editar">✏️</button>

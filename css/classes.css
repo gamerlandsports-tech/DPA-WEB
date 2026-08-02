@@ -324,3 +324,71 @@
   100% { background: rgba(34,197,94,0.06); }
 }
 .row-complete-anim { animation: completePulse 0.4s ease forwards; }
+
+/* ============================================================
+   UPCOMING CLASS ALERT ANIMATION (Pulsing Flashing)
+   ============================================================ */
+@keyframes classPulseAlert {
+  0% {
+    background: rgba(34, 197, 94, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    background: rgba(245, 158, 11, 0.25);
+    box-shadow: inset 0 0 15px rgba(245, 158, 11, 0.6);
+  }
+  100% {
+    background: rgba(34, 197, 94, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.4);
+  }
+}
+
+.classes-table tbody tr.row-upcoming-alert {
+  animation: classPulseAlert 1.5s infinite ease-in-out;
+  position: relative;
+}
+
+/* WhatsApp Button */
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #25d366;
+  color: #000;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: none;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.btn-whatsapp:hover {
+  background: #20ba5a;
+  transform: scale(1.05);
+}
+
+/* Alarm Toggle Badge */
+.alarm-toggle-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.alarm-toggle-badge.active {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: var(--accent);
+}
+.alarm-toggle-badge.inactive {
+  background: rgba(100, 116, 139, 0.15);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  color: var(--text-secondary);
+}

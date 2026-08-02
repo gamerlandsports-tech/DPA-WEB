@@ -196,7 +196,8 @@
       <div class="topbar-center" id="topbarTitle">
         <h1 class="page-title">Calendario</h1>
       </div>
-      <div class="topbar-right">
+      <div class="topbar-right" style="display:flex; align-items:center; gap:12px">
+        <span id="alarmStatusToggle" class="alarm-toggle-badge active" onclick="AlarmEngine.toggleEnabled()">🔔 Alarmas: ACTIVAS</span>
         <span class="current-date-display" id="currentDateDisplay"></span>
       </div>
     </header>
@@ -1130,6 +1131,7 @@
   <script src="js/stats.js?v=6"></script>
   <script src="js/prices.js?v=6"></script>
   <script src="js/tournaments.js?v=6"></script>
+  <script src="js/alarm.js?v=6"></script>
   <script src="js/auth-new.js?v=6"></script>
   <script src="js/app.js?v=6"></script>
 

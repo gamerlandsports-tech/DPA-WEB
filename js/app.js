@@ -31,6 +31,7 @@ const App = {
     Stats.init();
     if (typeof Prices !== 'undefined') Prices.init();
     if (typeof Tournaments !== 'undefined') Tournaments.init();
+    if (typeof AlarmEngine !== 'undefined') AlarmEngine.init();
 
     // Init CloudSync (Firebase)
     if (typeof CloudSync !== 'undefined') {
