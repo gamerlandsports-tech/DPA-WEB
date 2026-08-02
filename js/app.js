@@ -22,6 +22,7 @@ const App = {
     this._initClassesSection();
     this._initChangePasswordModal();
     this._updateTopbarDate();
+    this._initPwaInstallPrompt();
 
     // Init all modules
     Teachers.init();
@@ -41,6 +42,44 @@ const App = {
     // Init auth (shows login screen or restores session)
     Auth.initLoginScreen();
     Auth.boot();
+  },
+
+  _deferredPwaPrompt: null,
+
+  _initPwaInstallPrompt() {
+    const installBtn = document.getElementById('btnInstallPwa');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this._deferredPwaPrompt = e;
+      if (installBtn) installBtn.style.display = 'block';
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (this._deferredPwaPrompt) {
+          this._deferredPwaPrompt.prompt();
+          const choiceResult = await this._deferredPwaPrompt.userChoice;
+          if (choiceResult.outcome === 'accepted') {
+            installBtn.style.display = 'none';
+          }
+          this._deferredPwaPrompt = null;
+        } else {
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+          if (isIOS) {
+            alert("📱 En iPhone:\n1. Tocá el botón Compartir ⎋ abajo en Safari.\n2. Seleccioná 'Agregar a inicio' ➕.\n3. ¡Listo! Tendrás la App instalada.");
+          } else {
+            alert("📲 Para instalar DPA:\n1. Tocá los 3 puntos ⋮ del navegador.\n2. Seleccioná 'Instalar aplicación' o 'Agregar a la pantalla principal'.");
+          }
+        }
+      });
+
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+      if (isIOS && !isStandalone) {
+        installBtn.style.display = 'block';
+      }
+    }
   },
 
   /* ================================================================

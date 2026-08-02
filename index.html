@@ -9,6 +9,14 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
+  <!-- PWA Manifest & iOS Meta Tags -->
+  <link rel="manifest" href="manifest.json?v=7" />
+  <meta name="theme-color" content="#22c55e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DPA Padel" />
+  <link rel="apple-touch-icon" href="https://img.icons8.com/emoji/192/tennis-emoji.png" />
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -160,6 +168,12 @@
         <span class="nav-label">Configuración</span>
       </a>
     </nav>
+
+    <div style="padding: 0 16px 12px;">
+      <button type="button" class="btn btn-primary btn-sm" id="btnInstallPwa" style="display:none; width:100%; background:linear-gradient(135deg, #22c55e, #16a34a); font-weight:800; padding:10px; border-radius:8px; box-shadow:0 4px 12px rgba(34,197,94,0.3)">
+        📲 Instalar App DPA
+      </button>
+    </div>
 
     <div class="sidebar-footer">
       <div class="cloud-status-bar status-syncing" id="cloudStatus">
