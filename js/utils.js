@@ -10,6 +10,9 @@ const Utils = {
   generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
   },
+  uid() {
+    return this.generateId();
+  },
 
   /* ---- Date Formatting ---- */
   MONTHS_ES: [

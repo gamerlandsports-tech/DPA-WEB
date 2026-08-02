@@ -300,20 +300,27 @@ const Stats = {
   },
 
   saveAdvance() {
-    const amount    = document.getElementById('advanceAmount').value;
-    const date      = document.getElementById('advanceDate').value;
-    const teacherId = document.getElementById('advanceTeacher').value;
-    const note      = document.getElementById('advanceNote').value.trim();
+    const amountEl  = document.getElementById('advanceAmount');
+    const dateEl    = document.getElementById('advanceDate');
+    const teacherEl = document.getElementById('advanceTeacher');
+    const noteEl    = document.getElementById('advanceNote');
+
+    const amount    = amountEl ? amountEl.value : '';
+    const date      = dateEl ? dateEl.value : '';
+    const teacherId = teacherEl ? teacherEl.value : '';
+    const note      = noteEl ? noteEl.value.trim() : '';
 
     if (!amount || Number(amount) <= 0) {
       App.showToast('Por favor ingrese un monto de adelanto válido', 'error');
       return;
     }
 
+    const advDate = date || Utils.toISO(new Date());
+
     Storage.addAdvance({
       amount: Number(amount),
-      date: date || Utils.toISO(new Date()),
-      teacherId,
+      date: advDate,
+      teacherId: teacherId || Storage.getActiveTeacherId(),
       note,
     });
 
@@ -322,7 +329,8 @@ const Stats = {
     const overlay = document.getElementById('advanceFormOverlay');
     if (overlay) overlay.classList.remove('open');
 
-    this.render(this._year, this._month);
+    const d = Utils.fromISO(advDate);
+    this.render(d.getFullYear(), d.getMonth());
   },
 
   deleteAdvance(id) {

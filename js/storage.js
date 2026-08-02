@@ -484,7 +484,7 @@ const Storage = {
   addAdvance(data) {
     const advances = this.getAdvances();
     const newAdv = {
-      id: Utils.uid(),
+      id: Utils.generateId(),
       amount: Number(data.amount) || 0,
       date: data.date || Utils.toISO(new Date()),
       note: data.note || '',
