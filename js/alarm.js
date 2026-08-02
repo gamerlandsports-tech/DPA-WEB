@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    DPA — alarm.js — Motor de Alarmas, Vibración y Notificaciones
    ============================================================ */
 
@@ -194,10 +194,8 @@ const AlarmEngine = {
       const prev = classes[i - 1];
       const curr = classes[i];
 
-      const [pH, pM] = prev.time.split(':').map(Number);
-      const [cH, cM] = curr.time.split(':').map(Number);
-
-      const prevEndMinutes = pH * 60 + pM + 60; // Assuming 60 min class duration
+      const prevDuration = prev.tipo === 'academia' ? 90 : 60;
+      const prevEndMinutes = pH * 60 + pM + prevDuration;
       const currStartMinutes = cH * 60 + cM;
 
       if (currStartMinutes - prevEndMinutes >= 60) {

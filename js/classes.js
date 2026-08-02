@@ -157,7 +157,7 @@ const Classes = {
     tr.innerHTML = `
       <td class="row-num">${num}</td>
       <td class="col-fecha">${showDate ? Utils.formatShort(cls.date) : Utils.formatShort(cls.date)}</td>
-      <td class="cell-hora">${cls.time || '-'}</td>
+      <td class="cell-hora">${cls.time || '-'}${cls.tipo === 'academia' ? '<span style="display:block; font-size:10px; font-weight:700; color:var(--orange)">⏱ 1h 30m</span>' : ''}</td>
       <td class="cell-personas">${cls.persons || 1}</td>
       <td>${studentsHtml}</td>
       <td>${tipoLabels[cls.tipo] || '<span style="color:var(--text-muted)">-</span>'}</td>
@@ -315,10 +315,19 @@ const Classes = {
       const opt = document.createElement('option');
       opt.value = slot;
       
-      const isBooked = bookedHours.includes(slot);
-      if (isBooked) {
+      const slotMins = Utils.timeToMinutes(slot);
+
+      // Check if slot falls within duration of any existing non-cancelled class
+      const blockingClass = existingClasses.find(c => {
+        const cStartMins = Utils.timeToMinutes(c.time);
+        const cDuration  = (c.tipo === 'academia') ? 90 : 60; // Academia = 1h30m (90 min), Normal = 1h (60 min)
+        return slotMins >= cStartMins && slotMins < (cStartMins + cDuration);
+      });
+
+      if (blockingClass) {
         opt.disabled = true;
-        opt.textContent = `${slot} (Ocupado)`;
+        const durLabel = blockingClass.tipo === 'academia' ? 'Ocupado: Academia 1h30m' : 'Ocupado';
+        opt.textContent = `${slot} (${durLabel})`;
       } else {
         opt.textContent = slot;
       }
@@ -749,7 +758,10 @@ const Classes = {
 
     // Auto-update value preview when tipo or personas changes
     ['classTipo', 'classPersonas', 'classValorManual'].forEach(id => {
-      document.getElementById(id).addEventListener('change', () => this._updateValuePreview());
+      document.getElementById(id).addEventListener('change', () => {
+        this._updateValuePreview();
+        this._populateTimeSlots();
+      });
     });
     document.getElementById('classValorManual').addEventListener('input', () => this._updateValuePreview());
 

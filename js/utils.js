@@ -174,21 +174,24 @@ const Utils = {
     return dateStr === this.toISO(new Date());
   },
 
+  /* ---- Convert time string to total minutes ---- */
+  timeToMinutes(t) {
+    if (!t) return 0;
+    const match = t.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+    if (!match) return 0;
+    let h = parseInt(match[1]);
+    const m = parseInt(match[2]);
+    const ampm = match[3] ? match[3].toUpperCase() : null;
+    if (ampm) {
+      if (ampm === 'PM' && h !== 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+    }
+    return h * 60 + m;
+  },
+
   /* ---- Sort classes by time ---- */
   sortByTime(classes) {
-    return [...classes].sort((a, b) => {
-      const toMins = t => {
-        if (!t) return 0;
-        const match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
-        if (!match) return 0;
-        let h = parseInt(match[1]);
-        const m = parseInt(match[2]);
-        const ampm = match[3].toUpperCase();
-        if (ampm === 'PM' && h !== 12) h += 12;
-        if (ampm === 'AM' && h === 12) h = 0;
-        return h * 60 + m;
-      };
-      return toMins(a.time) - toMins(b.time);
-    });
+    return [...classes].sort((a, b) => this.timeToMinutes(a.time) - this.timeToMinutes(b.time));
   }
 };
+
