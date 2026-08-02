@@ -151,13 +151,21 @@ const Classes = {
       ? `<span class="badge-manual-price" title="Precio modificado manualmente">✏️ Personalizado</span>`
       : '';
 
+    const recurringBadge = cls.recurringGroupId
+      ? `<span class="badge-recurring" title="Clase Fija Recurrente">🔄 Fija</span>`
+      : '';
+
+    const deleteSeriesBtn = cls.recurringGroupId
+      ? `<button class="btn-delete-series" data-action="delete-series" data-group="${cls.recurringGroupId}" title="Eliminar Toda la Serie Recurrente (Toda la serie fija)">🔄🗑</button>`
+      : '';
+
     const tr = document.createElement('tr');
     tr.className = statusClass;
     tr.dataset.id = cls.id;
     tr.innerHTML = `
       <td class="row-num">${num}</td>
       <td class="col-fecha">${showDate ? Utils.formatShort(cls.date) : Utils.formatShort(cls.date)}</td>
-      <td class="cell-hora">${cls.time || '-'}${cls.tipo === 'academia' ? '<span style="display:block; font-size:10px; font-weight:700; color:var(--orange)">⏱ 1h 30m</span>' : ''}</td>
+      <td class="cell-hora">${cls.time || '-'}${recurringBadge}${cls.tipo === 'academia' ? '<span style="display:block; font-size:10px; font-weight:700; color:var(--orange)">⏱ 1h 30m</span>' : ''}</td>
       <td class="cell-personas">${cls.persons || 1}</td>
       <td>${studentsHtml}</td>
       <td>${tipoLabels[cls.tipo] || '<span style="color:var(--text-muted)">-</span>'}</td>
@@ -170,7 +178,8 @@ const Classes = {
       <td>
         <div class="action-btns">
           <button class="btn-edit-class" data-action="edit-class" data-id="${cls.id}" title="Editar">✏️</button>
-          <button class="btn-delete-class" data-action="delete-class" data-id="${cls.id}" title="Eliminar">🗑</button>
+          <button class="btn-delete-class" data-action="delete-class" data-id="${cls.id}" title="Eliminar únicamente esta clase">🗑</button>
+          ${deleteSeriesBtn}
         </div>
       </td>
     `;
@@ -254,6 +263,23 @@ const Classes = {
     if (document.getElementById('chkSendStudentWa')) {
       document.getElementById('chkSendStudentWa').checked = false;
     }
+    
+    // Reset recurring fields
+    const chkRec = document.getElementById('chkIsRecurring');
+    const recOptions = document.getElementById('recurringOptions');
+    if (chkRec) chkRec.checked = false;
+    if (recOptions) recOptions.style.display = 'none';
+
+    document.querySelectorAll('#recurringDaysPicker .btn-day-pill').forEach(btn => btn.classList.remove('active'));
+
+    const effectiveDate = dateStr || (classId ? Storage.getClass(classId)?.date : null) || Utils.toISO(new Date());
+    if (effectiveDate) {
+      const d = Utils.fromISO(effectiveDate);
+      const dayNum = d.getDay();
+      const pill = document.querySelector(`#recurringDaysPicker .btn-day-pill[data-day="${dayNum}"]`);
+      if (pill) pill.classList.add('active');
+    }
+
     this._renderSelectedStudents();
     this._updateValuePreview();
 
@@ -637,9 +663,46 @@ const Classes = {
 
     const sendWa = document.getElementById('chkSendStudentWa')?.checked;
 
+    const isRecurring = document.getElementById('chkIsRecurring')?.checked;
+    const selectedDays = Array.from(document.querySelectorAll('#recurringDaysPicker .btn-day-pill.active'))
+      .map(btn => parseInt(btn.dataset.day));
+    const durationMonths = parseInt(document.getElementById('recurringDuration').value) || 1;
+
     if (id) {
       Storage.updateClass(id, data);
       App.showToast('Clase actualizada', 'success');
+    } else if (isRecurring && selectedDays.length > 0) {
+      const recurringGroupId = 'rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      const startDate = Utils.fromISO(date);
+      const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + durationMonths, startDate.getDate());
+
+      let createdCount = 0;
+      let curr = new Date(startDate);
+
+      while (curr <= endDate) {
+        if (selectedDays.includes(curr.getDay())) {
+          const cDateStr = Utils.toISO(curr);
+          const cData = {
+            ...data,
+            date: cDateStr,
+            recurringGroupId,
+          };
+
+          Storage.addClass(cData);
+          createdCount++;
+
+          // Increment package usage for students
+          this._selectedStudents.forEach(s => {
+            const pkg = Storage.getStudentPackageStatus(s.id);
+            if (pkg.isActive) {
+              Storage.incrementPackageUsed(s.id);
+            }
+          });
+        }
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      App.showToast(`Serie de ${createdCount} clases fijas registradas`, 'success');
     } else {
       Storage.addClass(data);
       // Increment package usage for students with active packages
@@ -724,6 +787,22 @@ const Classes = {
     );
   },
 
+  deleteSeries(groupId) {
+    if (!groupId) return;
+    App.confirm(
+      '🔄🗑 Eliminar Toda la Serie Fija',
+      '¿Deseas eliminar TODAS las clases fijas de esta serie recurrente?',
+      () => {
+        const allClasses = Storage.getAllClassesRaw();
+        const toDelete = allClasses.filter(c => c.recurringGroupId === groupId);
+        toDelete.forEach(c => Storage.deleteClass(c.id));
+        App.showToast(`Se eliminaron ${toDelete.length} clases de la serie fija`, 'info');
+        this._refresh();
+        Calendar.refresh();
+      }
+    );
+  },
+
   /* ================================================================
      EVENT DELEGATION — tables
      ================================================================ */
@@ -736,6 +815,7 @@ const Classes = {
     if (action === 'cancel-class')   Classes.cancel(id);
     if (action === 'edit-class')     Classes.openForm(id);
     if (action === 'delete-class')   Classes.delete(id);
+    if (action === 'delete-series')  Classes.deleteSeries(btn.dataset.group);
   },
 
   /* ================================================================
@@ -748,6 +828,37 @@ const Classes = {
         document.getElementById('classFormOverlay').classList.remove('open');
       });
     });
+
+    // Toggle recurring options
+    const chkRec = document.getElementById('chkIsRecurring');
+    const recOptions = document.getElementById('recurringOptions');
+    if (chkRec && recOptions) {
+      chkRec.addEventListener('change', () => {
+        recOptions.style.display = chkRec.checked ? 'block' : 'none';
+      });
+    }
+
+    // Toggle day pills
+    document.querySelectorAll('#recurringDaysPicker .btn-day-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+      });
+    });
+
+    // Auto highlight day pill on date change
+    const dateInput = document.getElementById('classDate');
+    if (dateInput) {
+      dateInput.addEventListener('change', () => {
+        if (!dateInput.value) return;
+        const d = Utils.fromISO(dateInput.value);
+        const dayNum = d.getDay();
+        const activePills = document.querySelectorAll('#recurringDaysPicker .btn-day-pill.active');
+        if (activePills.length === 0) {
+          const pill = document.querySelector(`#recurringDaysPicker .btn-day-pill[data-day="${dayNum}"]`);
+          if (pill) pill.classList.add('active');
+        }
+      });
+    }
 
     // Overlay backdrop
     document.getElementById('classFormOverlay').addEventListener('click', e => {

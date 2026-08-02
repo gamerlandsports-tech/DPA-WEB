@@ -939,6 +939,38 @@
             <span>📱 Enviar aviso de reserva por WhatsApp al alumno al guardar</span>
           </label>
         </div>
+
+        <!-- Recurring Class Section -->
+        <div class="form-group recurring-class-box" style="margin-top:14px; background:rgba(34,197,94,0.05); padding:12px 14px; border:1px solid rgba(34,197,94,0.25); border-radius:10px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13.5px; font-weight:700; color:var(--accent); margin:0">
+            <input type="checkbox" id="chkIsRecurring" style="width:17px; height:17px; accent-color:var(--accent); cursor:pointer" />
+            <span>🔄 Clase Fija Recurrente (se repite todas las semanas)</span>
+          </label>
+
+          <div id="recurringOptions" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(34,197,94,0.2)">
+            <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-secondary); margin-bottom:6px">Repetir los días de la semana:</label>
+            <div class="recurring-days-picker" id="recurringDaysPicker" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px">
+              <button type="button" class="btn-day-pill" data-day="1">Lun</button>
+              <button type="button" class="btn-day-pill" data-day="2">Mar</button>
+              <button type="button" class="btn-day-pill" data-day="3">Mié</button>
+              <button type="button" class="btn-day-pill" data-day="4">Jue</button>
+              <button type="button" class="btn-day-pill" data-day="5">Vie</button>
+              <button type="button" class="btn-day-pill" data-day="6">Sáb</button>
+              <button type="button" class="btn-day-pill" data-day="0">Dom</button>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0">
+              <label for="recurringDuration" style="font-size:11.5px; font-weight:700; color:var(--text-secondary)">Duración de la repetición:</label>
+              <select id="recurringDuration" class="form-control">
+                <option value="1" selected>1 Mes (4 semanas)</option>
+                <option value="2">2 Meses (8 semanas)</option>
+                <option value="3">3 Meses (Trimestre - 12 semanas)</option>
+                <option value="6">6 Meses (Semestre - 24 semanas)</option>
+                <option value="12">1 Año (52 semanas)</option>
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" id="classFormCancel">Cancelar</button>
