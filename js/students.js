@@ -328,9 +328,17 @@ const Students = {
 
   /* ---- Init ---- */
   init() {
-    // Add buttons
     document.getElementById('addStudentBtn').addEventListener('click', () => this.openForm());
     document.getElementById('addStudentBtnEmpty').addEventListener('click', () => this.openForm());
+
+    const btnSync = document.getElementById('btnSyncPackages');
+    if (btnSync) {
+      btnSync.addEventListener('click', () => {
+        Storage.syncAllStudentPackages();
+        this.render(this._currentQuery);
+        App.showToast('✅ Clases reales y paquetes de alumnos restablecidos correctamente', 'success');
+      });
+    }
 
     // Form save
     document.getElementById('studentFormSave').addEventListener('click', () => this.save());

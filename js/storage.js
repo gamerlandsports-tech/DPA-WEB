@@ -241,14 +241,27 @@ const Storage = {
     return { total, used, remaining, isActive, price };
   },
 
-  incrementPackageUsed(studentId) {
+  decrementPackageUsed(studentId) {
     const s = this.getStudent(studentId);
     if (!s) return;
-    const total = Number(s.packageTotal) || 0;
-    const used  = Number(s.packageUsed)  || 0;
-    if (total > 0 && used < total) {
-      this.updateStudent(studentId, { packageUsed: used + 1 });
+    const used = Number(s.packageUsed) || 0;
+    if (used > 0) {
+      this.updateStudent(studentId, { packageUsed: used - 1 });
     }
+  },
+
+  syncAllStudentPackages() {
+    const students = this.getStudents();
+    const classes = this.getClasses();
+    students.forEach(s => {
+      const studentClasses = classes.filter(c => c.studentIds && c.studentIds.includes(s.id));
+      const completedOrActive = studentClasses.filter(c => c.status !== 'cancelled').length;
+      const total = Number(s.packageTotal) || 0;
+      if (total > 0) {
+        const newUsed = Math.min(total, completedOrActive);
+        this.updateStudent(s.id, { packageUsed: newUsed });
+      }
+    });
   },
 
   /**
@@ -356,6 +369,9 @@ const Storage = {
     if (typeof CloudSync !== 'undefined') CloudSync.delete('CLASSES', id);
     if (deletedClass) {
       this._renumberDay(deletedClass.date, remaining);
+      (deletedClass.studentIds || []).forEach(sid => {
+        this.decrementPackageUsed(sid);
+      });
     }
   },
 
