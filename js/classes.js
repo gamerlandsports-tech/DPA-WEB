@@ -349,6 +349,10 @@ const Classes = {
     const settings = Storage.getSettings();
     const slots    = Utils.generateTimeSlots(settings.timeStart, settings.timeEnd, settings.timeInterval);
     const select   = document.getElementById('classHour');
+    if (!select) return;
+
+    // PRESERVE currently chosen time!
+    const savedSelectedTime = select.value;
     
     const dateInput = document.getElementById('classDate');
     const selectedDate = dateInput ? dateInput.value : '';
@@ -390,6 +394,14 @@ const Classes = {
       }
       select.appendChild(opt);
     });
+
+    // Restore saved time selection if it's still available!
+    if (savedSelectedTime) {
+      const optionExists = Array.from(select.options).some(o => o.value === savedSelectedTime && !o.disabled);
+      if (optionExists) {
+        select.value = savedSelectedTime;
+      }
+    }
   },
 
   /* ================================================================

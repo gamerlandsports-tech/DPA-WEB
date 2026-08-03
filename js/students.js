@@ -187,6 +187,10 @@ const Students = {
     let existing = list.querySelector(`.recurring-day-row[data-day="${dayNum}"]`);
     if (existing) return;
 
+    const settings = (typeof Storage !== 'undefined' && Storage.getSettings) ? Storage.getSettings() : {};
+    const slots = Utils.generateTimeSlots(settings.timeStart || 7, settings.timeEnd || 22, settings.timeInterval || 30);
+    const timeOptions = slots.map(s => `<option value="${s}" ${s === defaultTime ? 'selected' : ''}>${s}</option>`).join('');
+
     const row = document.createElement('div');
     row.className = 'recurring-day-row';
     row.dataset.day = dayNum;
@@ -195,7 +199,9 @@ const Students = {
     row.innerHTML = `
       <span style="font-weight:700; font-size:12.5px; color:var(--accent); min-width:85px;">🗓 ${dayName}:</span>
       <div style="display:flex; align-items:center; gap:8px; flex:1;">
-        <input type="time" class="form-control student-day-time" value="${defaultTime}" style="width:120px; font-size:12px; padding:4px 8px;" />
+        <select class="form-control student-day-time" style="width:130px; font-size:12px; padding:4px 8px;">
+          ${timeOptions}
+        </select>
         <select class="form-control student-day-tipo" style="width:120px; font-size:12px; padding:4px 8px;">
           <option value="individual" ${defaultTipo === 'individual' ? 'selected' : ''}>Individual</option>
           <option value="grupal" ${defaultTipo === 'grupal' ? 'selected' : ''}>Grupal</option>
