@@ -119,6 +119,7 @@ const Students = {
     this._setGender('');
 
     // Reset recurring fields in student form
+    this._clearStudentScheduleList();
     const chkRec = document.getElementById('chkStudentRecurring');
     const recContainer = document.getElementById('studentRecurringContainer');
     if (chkRec && recContainer) {
@@ -143,15 +144,29 @@ const Students = {
       this._updatePackageResetBtn(s.packageUsed || 0, s.packageTotal || 0);
       this._setGender(s.gender || '');
 
-      if (s.recurringDays && s.recurringDays.length > 0) {
+      if (s.recurringSchedules && s.recurringSchedules.length > 0) {
+        if (chkRec) chkRec.checked = true;
+        if (recContainer) recContainer.style.display = 'block';
+        s.recurringSchedules.forEach(item => {
+          const pill = document.querySelector(`#studentRecurringDaysPicker .btn-day-pill[data-day="${item.day}"]`);
+          if (pill) {
+            pill.classList.add('active');
+            const dayName = pill.dataset.name || pill.textContent;
+            this._renderStudentDayScheduleRow(item.day, dayName, item.time || '18:00', item.tipo || 'grupal');
+          }
+        });
+        if (s.recurringValue) document.getElementById('studentRecurringValue').value = s.recurringValue;
+      } else if (s.recurringDays && s.recurringDays.length > 0) {
         if (chkRec) chkRec.checked = true;
         if (recContainer) recContainer.style.display = 'block';
         s.recurringDays.forEach(dayNum => {
           const pill = document.querySelector(`#studentRecurringDaysPicker .btn-day-pill[data-day="${dayNum}"]`);
-          if (pill) pill.classList.add('active');
+          if (pill) {
+            pill.classList.add('active');
+            const dayName = pill.dataset.name || pill.textContent;
+            this._renderStudentDayScheduleRow(dayNum, dayName, s.recurringTime || '18:00', s.recurringTipo || 'grupal');
+          }
         });
-        if (s.recurringTime) document.getElementById('studentRecurringTime').value = s.recurringTime;
-        if (s.recurringTipo) document.getElementById('studentRecurringTipo').value = s.recurringTipo;
         if (s.recurringValue) document.getElementById('studentRecurringValue').value = s.recurringValue;
       }
     } else {
@@ -161,6 +176,55 @@ const Students = {
 
     overlay.classList.add('open');
     document.getElementById('studentName').focus();
+  },
+
+  _renderStudentDayScheduleRow(dayNum, dayName, defaultTime = '18:00', defaultTipo = 'grupal') {
+    const list = document.getElementById('studentRecurringScheduleList');
+    if (!list) return;
+    const notice = document.getElementById('emptyScheduleNotice');
+    if (notice) notice.style.display = 'none';
+
+    let existing = list.querySelector(`.recurring-day-row[data-day="${dayNum}"]`);
+    if (existing) return;
+
+    const row = document.createElement('div');
+    row.className = 'recurring-day-row';
+    row.dataset.day = dayNum;
+    row.dataset.dayName = dayName;
+    row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 12px; background:rgba(255,255,255,0.04); border-radius:6px; border:1px solid var(--border);';
+    row.innerHTML = `
+      <span style="font-weight:700; font-size:12.5px; color:var(--accent); min-width:85px;">🗓 ${dayName}:</span>
+      <div style="display:flex; align-items:center; gap:8px; flex:1;">
+        <input type="time" class="form-control student-day-time" value="${defaultTime}" style="width:120px; font-size:12px; padding:4px 8px;" />
+        <select class="form-control student-day-tipo" style="width:120px; font-size:12px; padding:4px 8px;">
+          <option value="individual" ${defaultTipo === 'individual' ? 'selected' : ''}>Individual</option>
+          <option value="grupal" ${defaultTipo === 'grupal' ? 'selected' : ''}>Grupal</option>
+          <option value="academia" ${defaultTipo === 'academia' ? 'selected' : ''}>Academia</option>
+        </select>
+      </div>
+    `;
+    list.appendChild(row);
+  },
+
+  _removeStudentDayScheduleRow(dayNum) {
+    const list = document.getElementById('studentRecurringScheduleList');
+    if (!list) return;
+    const row = list.querySelector(`.recurring-day-row[data-day="${dayNum}"]`);
+    if (row) row.remove();
+
+    const rows = list.querySelectorAll('.recurring-day-row');
+    const notice = document.getElementById('emptyScheduleNotice');
+    if (rows.length === 0 && notice) {
+      notice.style.display = 'block';
+    }
+  },
+
+  _clearStudentScheduleList() {
+    const list = document.getElementById('studentRecurringScheduleList');
+    if (!list) return;
+    list.querySelectorAll('.recurring-day-row').forEach(r => r.remove());
+    const notice = document.getElementById('emptyScheduleNotice');
+    if (notice) notice.style.display = 'block';
   },
 
   _updatePackageResetBtn(used, total) {
@@ -198,10 +262,21 @@ const Students = {
     const packageUsed  = Number(document.getElementById('studentPackageUsed').value)  || 0;
 
     const isRecurring  = document.getElementById('chkStudentRecurring')?.checked;
-    const selectedDays = Array.from(document.querySelectorAll('#studentRecurringDaysPicker .btn-day-pill.active'))
-      .map(btn => parseInt(btn.dataset.day));
-    const recurringTime  = document.getElementById('studentRecurringTime')?.value || '18:00';
-    const recurringTipo  = document.getElementById('studentRecurringTipo')?.value || 'grupal';
+    const scheduleRows = Array.from(document.querySelectorAll('#studentRecurringScheduleList .recurring-day-row'));
+    
+    const recurringSchedules = scheduleRows.map(row => {
+      const dayNum = parseInt(row.dataset.day);
+      const timeInput = row.querySelector('.student-day-time');
+      const tipoSelect = row.querySelector('.student-day-tipo');
+      return {
+        day: dayNum,
+        dayName: row.dataset.dayName || '',
+        time: timeInput ? timeInput.value : '18:00',
+        tipo: tipoSelect ? tipoSelect.value : 'grupal'
+      };
+    });
+
+    const selectedDays = recurringSchedules.map(s => s.day);
     const recurringValue = Number(document.getElementById('studentRecurringValue')?.value) || 0;
     const durationMonths = parseInt(document.getElementById('studentRecurringDuration')?.value) || 1;
 
@@ -212,9 +287,8 @@ const Students = {
 
     const data = {
       name, lastName, phone, email, notes, gender, packageTotal, packagePrice, packageUsed,
+      recurringSchedules: isRecurring ? recurringSchedules : [],
       recurringDays: isRecurring ? selectedDays : [],
-      recurringTime: isRecurring ? recurringTime : '',
-      recurringTipo: isRecurring ? recurringTipo : '',
       recurringValue: isRecurring ? recurringValue : 0
     };
 
@@ -228,15 +302,15 @@ const Students = {
       App.showToast(`Alumno ${name} ${lastName} agregado`, 'success');
     }
 
-    if (isRecurring && selectedDays.length > 0 && studentObj) {
-      this._generateStudentFixedClasses(studentObj, selectedDays, recurringTime, recurringTipo, recurringValue, durationMonths);
+    if (isRecurring && recurringSchedules.length > 0 && studentObj) {
+      this._generateStudentFixedClasses(studentObj, recurringSchedules, recurringValue, durationMonths);
     }
 
     document.getElementById('studentFormOverlay').classList.remove('open');
     this.render(this._currentQuery);
   },
 
-  _generateStudentFixedClasses(studentObj, selectedDays, time, tipo, value, durationMonths) {
+  _generateStudentFixedClasses(studentObj, recurringSchedules, value, durationMonths) {
     const today = new Date();
     const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
     const endDate = new Date(today.getFullYear(), today.getMonth() + durationMonths, 0);
@@ -245,23 +319,24 @@ const Students = {
     let curr = new Date(startDate);
     let createdCount = 0;
 
-    let classVal = value;
-    if (!classVal && typeof Prices !== 'undefined' && Prices.getCalculatedPrices) {
-      const p = Prices.getCalculatedPrices();
-      if (p[tipo]) classVal = p[tipo];
-    }
-    if (!classVal) classVal = 0;
-
-    const profCut = Math.round(classVal * 0.5);
-    const clubCut = Math.round(classVal * 0.5);
-
     while (curr <= endDate) {
-      if (selectedDays.includes(curr.getDay())) {
+      const match = recurringSchedules.find(s => s.day === curr.getDay());
+      if (match) {
+        let classVal = value;
+        if (!classVal && typeof Prices !== 'undefined' && Prices.getCalculatedPrices) {
+          const p = Prices.getCalculatedPrices();
+          if (p[match.tipo]) classVal = p[match.tipo];
+        }
+        if (!classVal) classVal = 0;
+
+        const profCut = Math.round(classVal * 0.5);
+        const clubCut = Math.round(classVal * 0.5);
+
         const cDateStr = Utils.toISO(curr);
         const cData = {
           date: cDateStr,
-          time: time || '18:00',
-          tipo: tipo || 'grupal',
+          time: match.time || '18:00',
+          tipo: match.tipo || 'grupal',
           persons: 1,
           value: classVal,
           profCut: profCut,
@@ -277,7 +352,7 @@ const Students = {
     }
 
     Storage.syncAllStudentPackages();
-    App.showToast(`Se agendaron ${createdCount} clases fijas para ${studentObj.name}`, 'success');
+    App.showToast(`Se agendaron ${createdCount} clases fijas con sus respectivos horarios para ${studentObj.name}`, 'success');
   },
 
   /* ---- Delete student ---- */
@@ -476,7 +551,14 @@ const Students = {
 
     document.querySelectorAll('#studentRecurringDaysPicker .btn-day-pill').forEach(btn => {
       btn.addEventListener('click', () => {
-        btn.classList.toggle('active');
+        const isActive = btn.classList.toggle('active');
+        const dayNum = btn.dataset.day;
+        const dayName = btn.dataset.name || btn.textContent;
+        if (isActive) {
+          this._renderStudentDayScheduleRow(dayNum, dayName);
+        } else {
+          this._removeStudentDayScheduleRow(dayNum);
+        }
       });
     });
 

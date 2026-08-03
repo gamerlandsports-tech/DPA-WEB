@@ -23,11 +23,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=19" />
-  <link rel="stylesheet" href="css/calendar.css?v=19" />
-  <link rel="stylesheet" href="css/classes.css?v=19" />
-  <link rel="stylesheet" href="css/students.css?v=19" />
-  <link rel="stylesheet" href="css/tournaments.css?v=19" />
+  <link rel="stylesheet" href="css/main.css?v=20" />
+  <link rel="stylesheet" href="css/calendar.css?v=20" />
+  <link rel="stylesheet" href="css/classes.css?v=20" />
+  <link rel="stylesheet" href="css/students.css?v=20" />
+  <link rel="stylesheet" href="css/tournaments.css?v=20" />
 </head>
 <body>
 
@@ -1080,32 +1080,27 @@
           </div>
           <div id="studentRecurringContainer" style="display:none; padding-top:8px; border-top:1px solid var(--border);">
             <div class="form-group">
-              <label style="font-size:11.5px; font-weight:700; color:var(--text-secondary)">Días semanales:</label>
+              <label style="font-size:11.5px; font-weight:700; color:var(--text-secondary)">Selecciona los días semanales:</label>
               <div class="day-picker" id="studentRecurringDaysPicker">
-                <button type="button" class="btn-day-pill" data-day="1">Lun</button>
-                <button type="button" class="btn-day-pill" data-day="2">Mar</button>
-                <button type="button" class="btn-day-pill" data-day="3">Mié</button>
-                <button type="button" class="btn-day-pill" data-day="4">Jue</button>
-                <button type="button" class="btn-day-pill" data-day="5">Vie</button>
-                <button type="button" class="btn-day-pill" data-day="6">Sáb</button>
-                <button type="button" class="btn-day-pill" data-day="0">Dom</button>
+                <button type="button" class="btn-day-pill" data-day="1" data-name="Lunes">Lun</button>
+                <button type="button" class="btn-day-pill" data-day="2" data-name="Martes">Mar</button>
+                <button type="button" class="btn-day-pill" data-day="3" data-name="Miércoles">Mié</button>
+                <button type="button" class="btn-day-pill" data-day="4" data-name="Jueves">Jue</button>
+                <button type="button" class="btn-day-pill" data-day="5" data-name="Viernes">Vie</button>
+                <button type="button" class="btn-day-pill" data-day="6" data-name="Sábado">Sáb</button>
+                <button type="button" class="btn-day-pill" data-day="0" data-name="Domingo">Dom</button>
               </div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="studentRecurringTime">Hora fija</label>
-                <input type="time" id="studentRecurringTime" class="form-control" value="18:00" />
-              </div>
-              <div class="form-group">
-                <label for="studentRecurringTipo">Tipo de clase</label>
-                <select id="studentRecurringTipo" class="form-control">
-                  <option value="individual">Individual</option>
-                  <option value="grupal" selected>Grupal</option>
-                  <option value="academia">Academia</option>
-                </select>
+
+            <!-- Dynamic per-day schedule list -->
+            <div class="form-group">
+              <label style="font-size:11.5px; font-weight:700; color:var(--text-secondary)">Horarios individuales por día:</label>
+              <div id="studentRecurringScheduleList" style="display:flex; flex-direction:column; gap:8px; margin-top:4px;">
+                <p style="color:var(--text-muted); font-size:12px; margin:0;" id="emptyScheduleNotice">Selecciona uno o más días arriba para asignarles su horario.</p>
               </div>
             </div>
-            <div class="form-row">
+
+            <div class="form-row" style="margin-top:12px;">
               <div class="form-group">
                 <label for="studentRecurringValue">Valor por clase ($)</label>
                 <input type="number" id="studentRecurringValue" class="form-control" placeholder="Ej: 8000" />
@@ -1308,20 +1303,20 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <!-- App Modules -->
-  <script src="js/firebase-config.js?v=19"></script>
-  <script src="js/cloud-sync.js?v=19"></script>
-  <script src="js/utils.js?v=19"></script>
-  <script src="js/storage.js?v=19"></script>
-  <script src="js/teachers.js?v=19"></script>
-  <script src="js/students.js?v=19"></script>
-  <script src="js/classes.js?v=19"></script>
-  <script src="js/calendar.js?v=19"></script>
-  <script src="js/stats.js?v=19"></script>
-  <script src="js/prices.js?v=19"></script>
-  <script src="js/tournaments.js?v=19"></script>
-  <script src="js/alarm.js?v=19"></script>
-  <script src="js/auth-new.js?v=19"></script>
-  <script src="js/app.js?v=19"></script>
+  <script src="js/firebase-config.js?v=20"></script>
+  <script src="js/cloud-sync.js?v=20"></script>
+  <script src="js/utils.js?v=20"></script>
+  <script src="js/storage.js?v=20"></script>
+  <script src="js/teachers.js?v=20"></script>
+  <script src="js/students.js?v=20"></script>
+  <script src="js/classes.js?v=20"></script>
+  <script src="js/calendar.js?v=20"></script>
+  <script src="js/stats.js?v=20"></script>
+  <script src="js/prices.js?v=20"></script>
+  <script src="js/tournaments.js?v=20"></script>
+  <script src="js/alarm.js?v=20"></script>
+  <script src="js/auth-new.js?v=20"></script>
+  <script src="js/app.js?v=20"></script>
 
 </body>
 </html>
