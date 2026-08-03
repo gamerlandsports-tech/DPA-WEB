@@ -23,6 +23,7 @@ const App = {
     this._initChangePasswordModal();
     this._updateTopbarDate();
     this._initPwaInstallPrompt();
+    this._initServiceWorkerAutoUpdate();
 
     // Init all modules
     Teachers.init();
@@ -42,6 +43,52 @@ const App = {
     // Init auth (shows login screen or restores session)
     Auth.initLoginScreen();
     Auth.boot();
+  },
+
+  forceClearCacheAndReload() {
+    this.showToast('🔄 Limpiando caché y cargando última versión...', 'info');
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        for (let name of names) {
+          caches.delete(name);
+        }
+      });
+    }
+    sessionStorage.clear();
+    setTimeout(() => {
+      window.location.reload(true);
+    }, 400);
+  },
+
+  _initServiceWorkerAutoUpdate() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                App.showToast('🚀 Nueva versión instalada. Actualizando...', 'success');
+                setTimeout(() => window.location.reload(true), 600);
+              }
+            });
+          }
+        });
+      }).catch(err => console.log('SW Reg Error:', err));
+
+      window.addEventListener('focus', () => {
+        navigator.serviceWorker.getRegistration().then(reg => {
+          if (reg) reg.update();
+        });
+      });
+    }
   },
 
   _deferredPwaPrompt: null,
