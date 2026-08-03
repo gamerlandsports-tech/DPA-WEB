@@ -881,6 +881,14 @@ const Classes = {
     const newDateInput = document.getElementById('rescheduleNewDate');
     newDateInput.value = cls.date;
 
+    const recBox = document.getElementById('rescheduleRecurringBox');
+    const chkPerm = document.getElementById('chkReschedulePermanent');
+    if (chkPerm) chkPerm.checked = false;
+
+    if (recBox) {
+      recBox.style.display = cls.recurringGroupId ? 'block' : 'none';
+    }
+
     this._populateRescheduleTimeSlots(cls.date, cls.time, classId);
 
     overlay.classList.add('open');
@@ -934,6 +942,7 @@ const Classes = {
     const classId = document.getElementById('rescheduleClassId').value;
     const newDate = document.getElementById('rescheduleNewDate').value;
     const newHour = document.getElementById('rescheduleNewHour').value;
+    const isPermanent = document.getElementById('chkReschedulePermanent')?.checked;
 
     if (!classId) return;
     if (!newDate) {
@@ -948,14 +957,43 @@ const Classes = {
     const cls = Storage.getClass(classId);
     if (!cls) return;
 
-    const oldDate = cls.date;
+    const oldDateStr = cls.date;
+
+    // Update the target class instance
     Storage.updateClass(classId, { date: newDate, time: newHour });
 
-    document.getElementById('rescheduleModalOverlay').classList.remove('open');
-    App.showToast(`Clase reprogramada para el ${Utils.formatShort(newDate)} a las ${newHour} hs`, 'success');
+    if (isPermanent && cls.recurringGroupId) {
+      const allClasses = Storage.getAllClassesRaw();
+      const futureClasses = allClasses.filter(c => 
+        c.recurringGroupId === cls.recurringGroupId && 
+        c.id !== classId && 
+        c.date >= oldDateStr && 
+        c.status !== 'cancelled'
+      );
 
+      const dOld = Utils.fromISO(oldDateStr);
+      const dNew = Utils.fromISO(newDate);
+      const dayDiffMs = dNew.getTime() - dOld.getTime();
+      const dayDiffDays = Math.round(dayDiffMs / (1000 * 60 * 60 * 24));
+
+      futureClasses.forEach(c => {
+        let updatedDate = c.date;
+        if (dayDiffDays !== 0) {
+          const cDate = Utils.fromISO(c.date);
+          cDate.setDate(cDate.getDate() + dayDiffDays);
+          updatedDate = Utils.toISO(cDate);
+        }
+        Storage.updateClass(c.id, { date: updatedDate, time: newHour });
+      });
+
+      App.showToast(`Se reprogramaron ${futureClasses.length + 1} clases de la serie fija permanentemente`, 'success');
+    } else {
+      App.showToast(`Clase reprogramada únicamente por esta semana para el ${Utils.formatShort(newDate)} a las ${newHour} hs`, 'success');
+    }
+
+    document.getElementById('rescheduleModalOverlay').classList.remove('open');
     this._refresh(newDate);
-    this._refresh(oldDate);
+    this._refresh(oldDateStr);
     if (typeof Calendar !== 'undefined') Calendar.refresh();
   },
 
