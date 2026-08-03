@@ -118,6 +118,15 @@ const Students = {
     this._updatePackageResetBtn(0, 0);
     this._setGender('');
 
+    // Reset recurring fields in student form
+    const chkRec = document.getElementById('chkStudentRecurring');
+    const recContainer = document.getElementById('studentRecurringContainer');
+    if (chkRec && recContainer) {
+      chkRec.checked = false;
+      recContainer.style.display = 'none';
+      document.querySelectorAll('#studentRecurringDaysPicker .btn-day-pill').forEach(btn => btn.classList.remove('active'));
+    }
+
     if (studentId) {
       const s = Storage.getStudent(studentId);
       if (!s) return;
@@ -133,6 +142,18 @@ const Students = {
       document.getElementById('studentPackageUsed').value  = s.packageUsed  || 0;
       this._updatePackageResetBtn(s.packageUsed || 0, s.packageTotal || 0);
       this._setGender(s.gender || '');
+
+      if (s.recurringDays && s.recurringDays.length > 0) {
+        if (chkRec) chkRec.checked = true;
+        if (recContainer) recContainer.style.display = 'block';
+        s.recurringDays.forEach(dayNum => {
+          const pill = document.querySelector(`#studentRecurringDaysPicker .btn-day-pill[data-day="${dayNum}"]`);
+          if (pill) pill.classList.add('active');
+        });
+        if (s.recurringTime) document.getElementById('studentRecurringTime').value = s.recurringTime;
+        if (s.recurringTipo) document.getElementById('studentRecurringTipo').value = s.recurringTipo;
+        if (s.recurringValue) document.getElementById('studentRecurringValue').value = s.recurringValue;
+      }
     } else {
       title.textContent = 'Nuevo Alumno';
       idField.value = '';
@@ -176,23 +197,87 @@ const Students = {
     const packagePrice = Number(document.getElementById('studentPackagePrice').value) || 0;
     const packageUsed  = Number(document.getElementById('studentPackageUsed').value)  || 0;
 
+    const isRecurring  = document.getElementById('chkStudentRecurring')?.checked;
+    const selectedDays = Array.from(document.querySelectorAll('#studentRecurringDaysPicker .btn-day-pill.active'))
+      .map(btn => parseInt(btn.dataset.day));
+    const recurringTime  = document.getElementById('studentRecurringTime')?.value || '18:00';
+    const recurringTipo  = document.getElementById('studentRecurringTipo')?.value || 'grupal';
+    const recurringValue = Number(document.getElementById('studentRecurringValue')?.value) || 0;
+    const durationMonths = parseInt(document.getElementById('studentRecurringDuration')?.value) || 1;
+
     if (!name || !lastName) {
       App.showToast('Por favor complete nombre y apellido', 'error');
       return;
     }
 
-    const data = { name, lastName, phone, email, notes, gender, packageTotal, packagePrice, packageUsed };
+    const data = {
+      name, lastName, phone, email, notes, gender, packageTotal, packagePrice, packageUsed,
+      recurringDays: isRecurring ? selectedDays : [],
+      recurringTime: isRecurring ? recurringTime : '',
+      recurringTipo: isRecurring ? recurringTipo : '',
+      recurringValue: isRecurring ? recurringValue : 0
+    };
 
+    let studentObj;
     if (id) {
       Storage.updateStudent(id, data);
+      studentObj = Storage.getStudent(id);
       App.showToast(`Alumno ${name} ${lastName} actualizado`, 'success');
     } else {
-      Storage.addStudent(data);
+      studentObj = Storage.addStudent(data);
       App.showToast(`Alumno ${name} ${lastName} agregado`, 'success');
+    }
+
+    if (isRecurring && selectedDays.length > 0 && studentObj) {
+      this._generateStudentFixedClasses(studentObj, selectedDays, recurringTime, recurringTipo, recurringValue, durationMonths);
     }
 
     document.getElementById('studentFormOverlay').classList.remove('open');
     this.render(this._currentQuery);
+  },
+
+  _generateStudentFixedClasses(studentObj, selectedDays, time, tipo, value, durationMonths) {
+    const today = new Date();
+    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endDate = new Date(today.getFullYear(), today.getMonth() + durationMonths, 0);
+    const recurringGroupId = 'rec_std_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+
+    let curr = new Date(startDate);
+    let createdCount = 0;
+
+    let classVal = value;
+    if (!classVal && typeof Prices !== 'undefined' && Prices.getCalculatedPrices) {
+      const p = Prices.getCalculatedPrices();
+      if (p[tipo]) classVal = p[tipo];
+    }
+    if (!classVal) classVal = 0;
+
+    const profCut = Math.round(classVal * 0.5);
+    const clubCut = Math.round(classVal * 0.5);
+
+    while (curr <= endDate) {
+      if (selectedDays.includes(curr.getDay())) {
+        const cDateStr = Utils.toISO(curr);
+        const cData = {
+          date: cDateStr,
+          time: time || '18:00',
+          tipo: tipo || 'grupal',
+          persons: 1,
+          value: classVal,
+          profCut: profCut,
+          clubCut: clubCut,
+          studentIds: [studentObj.id],
+          status: 'pending',
+          recurringGroupId,
+        };
+        Storage.addClass(cData);
+        createdCount++;
+      }
+      curr.setDate(curr.getDate() + 1);
+    }
+
+    Storage.syncAllStudentPackages();
+    App.showToast(`Se agendaron ${createdCount} clases fijas para ${studentObj.name}`, 'success');
   },
 
   /* ---- Delete student ---- */
@@ -223,7 +308,6 @@ const Students = {
 
     // Build history rows
     const historyRows = stats.classes.map((cls, i) => {
-      const students = Storage.getStudents();
       const statusClass = cls.status === 'completed' ? 'status-completed' :
                           cls.status === 'cancelled'  ? 'status-cancelled'  : '';
       const statusText  = cls.status === 'completed' ? '✓ Completada' :
@@ -238,6 +322,13 @@ const Students = {
           <td>${cls.persons || 1}</td>
           <td>${Utils.formatCurrency(cls.value)}</td>
           <td>${statusText}</td>
+          <td>
+            <div style="display:flex; gap:4px; align-items:center;">
+              ${cls.status !== 'completed' ? `<button class="btn btn-xs btn-success" data-action="detail-complete-class" data-class-id="${cls.id}" data-student-id="${studentId}" title="Marcar como completada">✓</button>` : ''}
+              ${cls.status !== 'cancelled' ? `<button class="btn btn-xs btn-danger" style="background:rgba(239,68,68,0.2); color:#ef4444; border:1px solid rgba(239,68,68,0.4);" data-action="detail-cancel-class" data-class-id="${cls.id}" data-student-id="${studentId}" title="Cancelar esta clase pendiente">✗ Cancelar</button>` : ''}
+              <button class="btn btn-xs btn-ghost" style="color:var(--red)" data-action="detail-delete-class" data-class-id="${cls.id}" data-student-id="${studentId}" title="Eliminar clase">🗑</button>
+            </div>
+          </td>
         </tr>
       `;
     }).join('');
@@ -302,6 +393,7 @@ const Students = {
                   <th>Personas</th>
                   <th>Valor</th>
                   <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>${historyRows}</tbody>
@@ -311,6 +403,39 @@ const Students = {
         }
       </div>
     `;
+
+    body.onclick = (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const classId = btn.dataset.classId;
+      const sid = btn.dataset.studentId;
+
+      if (action === 'detail-complete-class') {
+        Storage.setClassStatus(classId, 'completed');
+        Storage.syncAllStudentPackages();
+        App.showToast('Clase marcada como completada', 'success');
+        this.showDetail(sid);
+        this.render(this._currentQuery);
+        if (typeof Calendar !== 'undefined') Calendar.refresh();
+      } else if (action === 'detail-cancel-class') {
+        Storage.setClassStatus(classId, 'cancelled');
+        Storage.syncAllStudentPackages();
+        App.showToast('Clase marcada como cancelada', 'info');
+        this.showDetail(sid);
+        this.render(this._currentQuery);
+        if (typeof Calendar !== 'undefined') Calendar.refresh();
+      } else if (action === 'detail-delete-class') {
+        App.confirm('¿Eliminar esta clase?', 'Se eliminará la clase permanentemente.', () => {
+          Storage.deleteClass(classId);
+          Storage.syncAllStudentPackages();
+          App.showToast('Clase eliminada', 'info');
+          this.showDetail(sid);
+          this.render(this._currentQuery);
+          if (typeof Calendar !== 'undefined') Calendar.refresh();
+        });
+      }
+    };
 
     document.getElementById('studentDetailOverlay').classList.add('open');
   },
@@ -339,6 +464,21 @@ const Students = {
         App.showToast('✅ Clases reales y paquetes de alumnos restablecidos correctamente', 'success');
       });
     }
+
+    // Toggle student recurring options
+    const chkStudentRec = document.getElementById('chkStudentRecurring');
+    const studentRecContainer = document.getElementById('studentRecurringContainer');
+    if (chkStudentRec && studentRecContainer) {
+      chkStudentRec.addEventListener('change', () => {
+        studentRecContainer.style.display = chkStudentRec.checked ? 'block' : 'none';
+      });
+    }
+
+    document.querySelectorAll('#studentRecurringDaysPicker .btn-day-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+      });
+    });
 
     // Form save
     document.getElementById('studentFormSave').addEventListener('click', () => this.save());
