@@ -405,6 +405,7 @@ const Students = {
           <td>${statusText}</td>
           <td>
             <div style="display:flex; gap:4px; align-items:center;">
+              <button class="btn btn-xs btn-secondary" data-action="detail-reschedule-class" data-class-id="${cls.id}" data-student-id="${studentId}" title="Reprogramar (Cambiar Día u Horario)" style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); color:#60a5fa;">📅 Reprogramar</button>
               ${cls.status !== 'completed' ? `<button class="btn btn-xs btn-success" data-action="detail-complete-class" data-class-id="${cls.id}" data-student-id="${studentId}" title="Marcar como completada">✓</button>` : ''}
               ${cls.status !== 'cancelled' ? `<button class="btn btn-xs btn-danger" style="background:rgba(239,68,68,0.2); color:#ef4444; border:1px solid rgba(239,68,68,0.4);" data-action="detail-cancel-class" data-class-id="${cls.id}" data-student-id="${studentId}" title="Cancelar esta clase pendiente">✗ Cancelar</button>` : ''}
               <button class="btn btn-xs btn-ghost" style="color:var(--red)" data-action="detail-delete-class" data-class-id="${cls.id}" data-student-id="${studentId}" title="Eliminar clase">🗑</button>
@@ -492,7 +493,9 @@ const Students = {
       const classId = btn.dataset.classId;
       const sid = btn.dataset.studentId;
 
-      if (action === 'detail-complete-class') {
+      if (action === 'detail-reschedule-class') {
+        if (typeof Classes !== 'undefined') Classes.openReschedule(classId);
+      } else if (action === 'detail-complete-class') {
         Storage.setClassStatus(classId, 'completed');
         Storage.syncAllStudentPackages();
         App.showToast('Clase marcada como completada', 'success');

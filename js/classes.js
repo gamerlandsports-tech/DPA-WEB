@@ -200,7 +200,8 @@ const Classes = {
       <td class="${cls.status === 'completed' ? 'cell-completed-fill' : ''}"><div class="estado-cell">${statusHtml} ${waBtn}</div></td>
       <td>
         <div class="action-btns">
-          <button class="btn-edit-class" data-action="edit-class" data-id="${cls.id}" title="Editar">✏️</button>
+          <button class="btn-reschedule-class" data-action="reschedule-class" data-id="${cls.id}" title="Reprogramar (Cambiar Día u Horario)" style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); color:#60a5fa; padding:3px 6px; border-radius:4px; font-size:11px; cursor:pointer;">📅</button>
+          <button class="btn-edit-class" data-action="edit-class" data-id="${cls.id}" title="Editar todas las opciones">✏️</button>
           <button class="btn-delete-class" data-action="delete-class" data-id="${cls.id}" title="Eliminar únicamente esta clase">🗑</button>
           ${deleteSeriesBtn}
         </div>
@@ -854,8 +855,108 @@ const Classes = {
     if (action === 'complete-class') Classes.complete(id);
     if (action === 'cancel-class')   Classes.cancel(id);
     if (action === 'edit-class')     Classes.openForm(id);
+    if (action === 'reschedule-class') Classes.openReschedule(id);
     if (action === 'delete-class')   Classes.delete(id);
     if (action === 'delete-series')  Classes.deleteSeries(btn.dataset.group);
+  },
+
+  /* ================================================================
+     RESCHEDULE CLASS (Cambiar Día u Horario)
+     ================================================================ */
+  openReschedule(classId) {
+    const cls = Storage.getClass(classId);
+    if (!cls) return;
+
+    const overlay = document.getElementById('rescheduleModalOverlay');
+    const studentNames = (cls.studentIds || [])
+      .map(id => {
+        const s = Storage.getStudent(id);
+        return s ? Utils.fullName(s.name, s.lastName) : null;
+      }).filter(Boolean).join(', ') || 'Sin Alumno';
+
+    document.getElementById('rescheduleClassId').value = classId;
+    document.getElementById('rescheduleInfoStudent').textContent = `Alumno: ${studentNames}`;
+    document.getElementById('rescheduleInfoCurrent').textContent = `Fecha y Hora actual: ${Utils.formatFull(cls.date)} a las ${cls.time || '-'}`;
+
+    const newDateInput = document.getElementById('rescheduleNewDate');
+    newDateInput.value = cls.date;
+
+    this._populateRescheduleTimeSlots(cls.date, cls.time, classId);
+
+    overlay.classList.add('open');
+  },
+
+  _populateRescheduleTimeSlots(dateStr, currentTime, classId) {
+    const settings = Storage.getSettings();
+    const slots    = Utils.generateTimeSlots(settings.timeStart, settings.timeEnd, settings.timeInterval);
+    const select   = document.getElementById('rescheduleNewHour');
+    if (!select) return;
+
+    const activeTeacherId = Storage.getActiveTeacherId();
+    const existingClasses = (dateStr && activeTeacherId)
+      ? Storage.getAllClassesRaw().filter(c => 
+          c.date === dateStr && 
+          c.teacherId === activeTeacherId && 
+          c.id !== classId &&
+          c.status !== 'cancelled'
+        )
+      : [];
+
+    select.innerHTML = '<option value="">Seleccionar nuevo horario...</option>';
+    slots.forEach(slot => {
+      const opt = document.createElement('option');
+      opt.value = slot;
+      const slotMins = Utils.timeToMinutes(slot);
+
+      const blockingClass = existingClasses.find(c => {
+        const cStartMins = Utils.timeToMinutes(c.time);
+        const cDuration  = (c.tipo === 'academia') ? 90 : 60;
+        return slotMins >= cStartMins && slotMins < (cStartMins + cDuration);
+      });
+
+      if (blockingClass) {
+        opt.disabled = true;
+        const durLabel = blockingClass.tipo === 'academia' ? 'Ocupado: Academia 1h30m' : 'Ocupado';
+        opt.textContent = `${slot} (${durLabel})`;
+      } else {
+        opt.textContent = slot;
+      }
+      select.appendChild(opt);
+    });
+
+    if (currentTime) {
+      const optionExists = Array.from(select.options).some(o => o.value === currentTime && !o.disabled);
+      if (optionExists) select.value = currentTime;
+    }
+  },
+
+  saveReschedule() {
+    const classId = document.getElementById('rescheduleClassId').value;
+    const newDate = document.getElementById('rescheduleNewDate').value;
+    const newHour = document.getElementById('rescheduleNewHour').value;
+
+    if (!classId) return;
+    if (!newDate) {
+      App.showToast('Seleccione la nueva fecha', 'error');
+      return;
+    }
+    if (!newHour) {
+      App.showToast('Seleccione el nuevo horario', 'error');
+      return;
+    }
+
+    const cls = Storage.getClass(classId);
+    if (!cls) return;
+
+    const oldDate = cls.date;
+    Storage.updateClass(classId, { date: newDate, time: newHour });
+
+    document.getElementById('rescheduleModalOverlay').classList.remove('open');
+    App.showToast(`Clase reprogramada para el ${Utils.formatShort(newDate)} a las ${newHour} hs`, 'success');
+
+    this._refresh(newDate);
+    this._refresh(oldDate);
+    if (typeof Calendar !== 'undefined') Calendar.refresh();
   },
 
   /* ================================================================
@@ -868,6 +969,39 @@ const Classes = {
         document.getElementById('classFormOverlay').classList.remove('open');
       });
     });
+
+    // Reschedule modal handlers
+    ['rescheduleClose', 'rescheduleCancel'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          document.getElementById('rescheduleModalOverlay').classList.remove('open');
+        });
+      }
+    });
+
+    const rescheduleOverlay = document.getElementById('rescheduleModalOverlay');
+    if (rescheduleOverlay) {
+      rescheduleOverlay.addEventListener('click', e => {
+        if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+      });
+    }
+
+    const btnSaveReschedule = document.getElementById('rescheduleSave');
+    if (btnSaveReschedule) {
+      btnSaveReschedule.addEventListener('click', () => this.saveReschedule());
+    }
+
+    const rescheduleDateInput = document.getElementById('rescheduleNewDate');
+    if (rescheduleDateInput) {
+      rescheduleDateInput.addEventListener('change', () => {
+        const classId = document.getElementById('rescheduleClassId').value;
+        const newDate = rescheduleDateInput.value;
+        if (newDate && classId) {
+          this._populateRescheduleTimeSlots(newDate, null, classId);
+        }
+      });
+    }
 
     // Toggle recurring options
     const chkRec = document.getElementById('chkIsRecurring');
