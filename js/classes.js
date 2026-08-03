@@ -886,7 +886,7 @@ const Classes = {
     if (chkPerm) chkPerm.checked = false;
 
     if (recBox) {
-      recBox.style.display = cls.recurringGroupId ? 'block' : 'none';
+      recBox.style.display = 'block';
     }
 
     this._populateRescheduleTimeSlots(cls.date, cls.time, classId);
@@ -962,14 +962,25 @@ const Classes = {
     // Update the target class instance
     Storage.updateClass(classId, { date: newDate, time: newHour });
 
-    if (isPermanent && cls.recurringGroupId) {
+    if (isPermanent) {
       const allClasses = Storage.getAllClassesRaw();
-      const futureClasses = allClasses.filter(c => 
-        c.recurringGroupId === cls.recurringGroupId && 
-        c.id !== classId && 
-        c.date >= oldDateStr && 
-        c.status !== 'cancelled'
-      );
+      let futureClasses = [];
+
+      if (cls.recurringGroupId) {
+        futureClasses = allClasses.filter(c => 
+          c.recurringGroupId === cls.recurringGroupId && 
+          c.id !== classId && 
+          c.date >= oldDateStr && 
+          c.status !== 'cancelled'
+        );
+      } else if (cls.studentIds && cls.studentIds.length > 0) {
+        futureClasses = allClasses.filter(c => 
+          c.id !== classId && 
+          c.date >= oldDateStr && 
+          c.status !== 'cancelled' &&
+          c.studentIds && c.studentIds.some(sid => cls.studentIds.includes(sid))
+        );
+      }
 
       const dOld = Utils.fromISO(oldDateStr);
       const dNew = Utils.fromISO(newDate);
@@ -986,7 +997,7 @@ const Classes = {
         Storage.updateClass(c.id, { date: updatedDate, time: newHour });
       });
 
-      App.showToast(`Se reprogramaron ${futureClasses.length + 1} clases de la serie fija permanentemente`, 'success');
+      App.showToast(`Se reprogramaron ${futureClasses.length + 1} clases permanentemente`, 'success');
     } else {
       App.showToast(`Clase reprogramada únicamente por esta semana para el ${Utils.formatShort(newDate)} a las ${newHour} hs`, 'success');
     }
