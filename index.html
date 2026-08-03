@@ -23,11 +23,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=10" />
-  <link rel="stylesheet" href="css/calendar.css?v=10" />
-  <link rel="stylesheet" href="css/classes.css?v=10" />
-  <link rel="stylesheet" href="css/students.css?v=10" />
-  <link rel="stylesheet" href="css/tournaments.css?v=10" />
+  <link rel="stylesheet" href="css/main.css?v=15" />
+  <link rel="stylesheet" href="css/calendar.css?v=15" />
+  <link rel="stylesheet" href="css/classes.css?v=15" />
+  <link rel="stylesheet" href="css/students.css?v=15" />
+  <link rel="stylesheet" href="css/tournaments.css?v=15" />
 </head>
 <body>
 
@@ -449,43 +449,49 @@
         </div>
       </div>
 
-      <div class="stats-grid">
-        <!-- 1. Summary cards (Full Width at top) -->
-        <div class="stats-section full-width">
-          <h3>Resumen del Mes</h3>
-          <div class="stats-cards" id="statsCards">
+      <div class="ns-wrapper">
+        <!-- 1. Summary cards -->
+        <div class="ns-card ns-summary">
+          <h3 class="ns-title">Resumen del Mes</h3>
+          <div class="ns-summary-grid" id="statsCards">
+            <!-- Rendered by JS -->
           </div>
         </div>
 
-        <!-- 2. By type -->
-        <div class="stats-section">
-          <h3>Por Tipo de Clase</h3>
-          <div class="type-bars" id="typeBars">
+        <!-- 2. Two-column container for medium/large screens -->
+        <div class="ns-row">
+          <!-- By type -->
+          <div class="ns-card ns-col">
+            <h3 class="ns-title">Por Tipo de Clase</h3>
+            <div class="ns-content" id="typeBars">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Gender distribution -->
+          <div class="ns-card ns-col" id="genderStatsSection">
+            <h3 class="ns-title">Distribución por Género</h3>
+            <div class="ns-content" id="genderStatsContent">
+              <p style="color:var(--text-muted); font-size:13px; text-align:center; padding: 20px 0;">Sin datos de género registrados.</p>
+            </div>
           </div>
         </div>
 
-        <!-- 3. Gender distribution -->
-        <div class="stats-section" id="genderStatsSection">
-          <h3>Distribución por Género</h3>
-          <div id="genderStatsContent">
-            <p style="color:var(--text-muted); font-size:13px;">Sin datos de género registrados.</p>
+        <!-- 3. Top students ranking -->
+        <div class="ns-card">
+          <h3 class="ns-title">Ranking de Alumnos (mes)</h3>
+          <div class="ns-list-container" id="rankingList">
+            <!-- Rendered by JS -->
           </div>
         </div>
 
-        <!-- 4. Top students ranking -->
-        <div class="stats-section">
-          <h3>Ranking de Alumnos (mes)</h3>
-          <div class="ranking-list" id="rankingList" style="max-height:220px; overflow-y:auto; padding-right:4px">
-          </div>
-        </div>
-
-        <!-- 5. Club Advances section -->
-        <div class="stats-section">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px">
-            <h3 style="margin:0">💸 Adelantos y Entregas</h3>
+        <!-- 4. Club Advances section -->
+        <div class="ns-card">
+          <div class="ns-card-header">
+            <h3 class="ns-title" style="margin:0">💸 Adelantos y Entregas</h3>
             <button class="btn btn-primary btn-sm" id="btnAddAdvance">💸 + Registrar</button>
           </div>
-          <div id="advancesListContent" style="max-height:220px; overflow-y:auto; padding-right:4px">
+          <div class="ns-list-container" id="advancesListContent">
             <!-- Rendered by JS -->
           </div>
         </div>
@@ -1247,20 +1253,20 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <!-- App Modules -->
-  <script src="js/firebase-config.js?v=6"></script>
-  <script src="js/cloud-sync.js?v=6"></script>
-  <script src="js/utils.js?v=6"></script>
-  <script src="js/storage.js?v=6"></script>
-  <script src="js/teachers.js?v=6"></script>
-  <script src="js/students.js?v=6"></script>
-  <script src="js/classes.js?v=6"></script>
-  <script src="js/calendar.js?v=6"></script>
-  <script src="js/stats.js?v=6"></script>
-  <script src="js/prices.js?v=6"></script>
-  <script src="js/tournaments.js?v=6"></script>
-  <script src="js/alarm.js?v=6"></script>
-  <script src="js/auth-new.js?v=6"></script>
-  <script src="js/app.js?v=6"></script>
+  <script src="js/firebase-config.js?v=15"></script>
+  <script src="js/cloud-sync.js?v=15"></script>
+  <script src="js/utils.js?v=15"></script>
+  <script src="js/storage.js?v=15"></script>
+  <script src="js/teachers.js?v=15"></script>
+  <script src="js/students.js?v=15"></script>
+  <script src="js/classes.js?v=15"></script>
+  <script src="js/calendar.js?v=15"></script>
+  <script src="js/stats.js?v=15"></script>
+  <script src="js/prices.js?v=15"></script>
+  <script src="js/tournaments.js?v=15"></script>
+  <script src="js/alarm.js?v=15"></script>
+  <script src="js/auth-new.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
 
 </body>
 </html>

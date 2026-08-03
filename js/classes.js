@@ -74,7 +74,22 @@ const Classes = {
       byDate[cls.date].push(cls);
     });
 
+    let lastDate = null;
+
     monthClasses.forEach(cls => {
+      if (cls.date !== lastDate) {
+        const d = Utils.fromISO(cls.date);
+        const dayOfWeek = d.getDay();
+        const isNewWeek = dayOfWeek === 1 && lastDate !== null;
+        
+        const sep = document.createElement('tr');
+        sep.className = isNewWeek ? 'row-separator week-separator' : 'row-separator day-separator';
+        sep.innerHTML = `<td colspan="13" class="separator-cell">📅 ${Utils.formatLong(cls.date)}</td>`;
+        tbody.appendChild(sep);
+        
+        lastDate = cls.date;
+      }
+      
       const dayGroup   = Utils.sortByTime(byDate[cls.date] || []);
       const dayIdx     = dayGroup.findIndex(c => c.id === cls.id);
       const row = this._buildRow(cls, dayIdx + 1, true);
@@ -144,7 +159,8 @@ const Classes = {
     const statusClass = [
       cls.status === 'completed' ? 'row-completed' : cls.status === 'cancelled' ? 'row-cancelled' : '',
       cls.isManualPrice ? 'row-manual-price' : '',
-      isUpcoming ? 'row-upcoming-alert' : ''
+      isUpcoming ? 'row-upcoming-alert' : '',
+      cls.recurringGroupId ? 'row-recurring' : ''
     ].filter(Boolean).join(' ');
 
     const manualBadge = cls.isManualPrice
@@ -679,7 +695,7 @@ const Classes = {
     } else if (isRecurring && selectedDays.length > 0) {
       const recurringGroupId = 'rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
       const startDate = Utils.fromISO(date);
-      const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + durationMonths, startDate.getDate());
+      const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + durationMonths, 0);
 
       let createdCount = 0;
       let curr = new Date(startDate);

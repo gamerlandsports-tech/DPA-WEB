@@ -48,41 +48,41 @@ const Stats = {
     const netBalance = realProf - totalAdvances;
 
     container.innerHTML = `
-      <div class="stat-card">
-        <div class="stat-val">${stats.total}</div>
-        <div class="stat-label">Total clases</div>
+      <div class="ns-summary-card">
+        <div class="ns-val">${stats.total}</div>
+        <div class="ns-label">Total clases</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--green)">${stats.completed}</div>
-        <div class="stat-label">Completadas</div>
+      <div class="ns-summary-card">
+        <div class="ns-val" style="color:var(--green)">${stats.completed}</div>
+        <div class="ns-label">Completadas</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--red)">${stats.cancelled}</div>
-        <div class="stat-label">Canceladas</div>
+      <div class="ns-summary-card">
+        <div class="ns-val" style="color:var(--red)">${stats.cancelled}</div>
+        <div class="ns-label">Canceladas</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-val">${stats.pending}</div>
-        <div class="stat-label">Pendientes</div>
+      <div class="ns-summary-card">
+        <div class="ns-val">${stats.pending}</div>
+        <div class="ns-label">Pendientes</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--accent)">${Utils.formatCurrency(realIngresos)}</div>
-        <div class="stat-label">💵 Ingreso Real (Completadas)</div>
+      <div class="ns-summary-card">
+        <div class="ns-val" style="color:var(--accent)">${Utils.formatCurrency(realIngresos)}</div>
+        <div class="ns-label">💵 Ingreso Real (Completadas)</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--text-secondary)">${Utils.formatCurrency(stats.totalValue)}</div>
-        <div class="stat-label">📅 Ingreso Proyectado (Reservas)</div>
+      <div class="ns-summary-card">
+        <div class="ns-val" style="color:var(--text-secondary)">${Utils.formatCurrency(stats.totalValue)}</div>
+        <div class="ns-label">📅 Ingreso Proyectado (Reservas)</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--green)">${Utils.formatCurrency(realProf)}</div>
-        <div class="stat-label">📊 Ganancia Real Profesor</div>
+      <div class="ns-summary-card">
+        <div class="ns-val" style="color:var(--green)">${Utils.formatCurrency(realProf)}</div>
+        <div class="ns-label">📊 Ganancia Real Profesor</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--red)">-${Utils.formatCurrency(totalAdvances)}</div>
-        <div class="stat-label">💸 Adelantos Entregados Club</div>
+      <div class="ns-summary-card">
+        <div class="ns-val" style="color:var(--red)">-${Utils.formatCurrency(totalAdvances)}</div>
+        <div class="ns-label">💸 Adelantos Entregados Club</div>
       </div>
-      <div class="stat-card" style="border:2px solid var(--accent); background:rgba(34,197,94,0.06)">
-        <div class="stat-val" style="color:var(--accent); font-size:22px">${Utils.formatCurrency(netBalance)}</div>
-        <div class="stat-label" style="color:var(--accent); font-weight:800">💵 Saldo Neto a Cobrar (Profe)</div>
+      <div class="ns-summary-card" style="border:1px solid var(--accent); background:rgba(34,197,94,0.06); flex-basis:100%;">
+        <div class="ns-val" style="color:var(--accent); font-size:26px">${Utils.formatCurrency(netBalance)}</div>
+        <div class="ns-label" style="color:var(--accent); font-weight:800">💵 Saldo Neto a Cobrar (Profe)</div>
       </div>
     `;
   },
@@ -98,42 +98,26 @@ const Stats = {
       return;
     }
 
-    let html = `
-      <div class="table-container" style="margin-top:8px">
-        <table class="classes-table" style="width:100%">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Profesor</th>
-              <th>Concepto / Detalle</th>
-              <th>Monto Entregado</th>
-              <th style="text-align:right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
+    let html = '';
     advances.forEach(a => {
       const prof = Storage.getTeacher(a.teacherId);
       const profName = prof ? Utils.fullName(prof.name, prof.lastName) : 'General';
       html += `
-        <tr>
-          <td>${Utils.formatShort(a.date)}</td>
-          <td><strong>${profName}</strong></td>
-          <td>${a.note || '<span style="opacity:0.5">-</span>'}</td>
-          <td style="color:var(--red); font-weight:800">-${Utils.formatCurrency(a.amount)}</td>
-          <td style="text-align:right">
+        <div class="ns-advance-item">
+          <div class="ns-advance-info">
+            <div class="ns-advance-header">
+              <span class="ns-advance-prof">${profName}</span>
+              <span class="ns-advance-date">${Utils.formatShort(a.date)}</span>
+            </div>
+            <div class="ns-advance-note">${a.note || '<span style="opacity:0.5">Sin detalle</span>'}</div>
+          </div>
+          <div class="ns-advance-amount">-${Utils.formatCurrency(a.amount)}</div>
+          <div class="ns-advance-actions">
             <button class="btn-delete-class" onclick="Stats.deleteAdvance('${a.id}')" title="Eliminar Adelanto">🗑</button>
-          </td>
-        </tr>
+          </div>
+        </div>
       `;
     });
-
-    html += `
-          </tbody>
-        </table>
-      </div>
-    `;
 
     container.innerHTML = html;
   },
@@ -148,21 +132,21 @@ const Stats = {
       { key: 'academia',   label: 'Academia',          cls: 'fill-academia' },
     ];
 
-    container.innerHTML = types.map(t => {
+    container.innerHTML = '<div class="ns-type-list">' + types.map(t => {
       const count  = classes.filter(c => c.tipo === t.key).length;
       const pct    = Math.round((count / total) * 100);
       return `
-        <div class="type-bar-item">
-          <div class="type-bar-header">
-            <span class="type-bar-name">${t.label}</span>
-            <span class="type-bar-count">${count} clases (${pct}%)</span>
+        <div class="ns-type-item">
+          <div class="ns-type-header">
+            <span class="ns-type-name">${t.label}</span>
+            <span class="ns-type-count">${count} clases (${pct}%)</span>
           </div>
-          <div class="type-bar-bg">
-            <div class="type-bar-fill ${t.cls}" style="width:${pct}%"></div>
+          <div class="ns-type-bar">
+            <div class="ns-type-fill ${t.cls}" style="width:${pct}%"></div>
           </div>
         </div>
       `;
-    }).join('');
+    }).join('') + '</div>';
   },
 
   _renderRanking(classes) {
@@ -191,10 +175,10 @@ const Stats = {
       if (!s) return '';
       const pos = i < 3 ? posCls[i] : '';
       return `
-        <div class="ranking-item">
-          <div class="rank-pos ${pos}">${i + 1}</div>
-          <div class="rank-name">${Utils.fullName(s.name, s.lastName)}</div>
-          <div class="rank-classes">${count} ${count === 1 ? 'clase' : 'clases'}</div>
+        <div class="ns-list-item">
+          <div class="ns-rank-pos ${pos}">${i + 1}</div>
+          <div class="ns-rank-name">${Utils.fullName(s.name, s.lastName)}</div>
+          <div class="ns-rank-val">${count} ${count === 1 ? 'clase' : 'clases'}</div>
         </div>
       `;
     }).join('');
@@ -227,22 +211,22 @@ const Stats = {
     const noSpecPct = 100 - mascPct - femPct;
 
     container.innerHTML = `
-      <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px;">
-        <div class="stat-card" style="flex:1; min-width:110px;">
-          <div class="stat-val" style="color:#60a5fa">${masc}</div>
-          <div class="stat-label">♂ Masculino (${mascPct}%)</div>
+      <div class="ns-summary-grid" style="margin-bottom:16px;">
+        <div class="ns-summary-card">
+          <div class="ns-val" style="color:#60a5fa">${masc}</div>
+          <div class="ns-label">♂ Masculino (${mascPct}%)</div>
         </div>
-        <div class="stat-card" style="flex:1; min-width:110px;">
-          <div class="stat-val" style="color:#f472b6">${fem}</div>
-          <div class="stat-label">♀ Femenino (${femPct}%)</div>
+        <div class="ns-summary-card">
+          <div class="ns-val" style="color:#f472b6">${fem}</div>
+          <div class="ns-label">♀ Femenino (${femPct}%)</div>
         </div>
-        <div class="stat-card" style="flex:1; min-width:110px;">
-          <div class="stat-val" style="color:var(--text-secondary)">${noSpec}</div>
-          <div class="stat-label">Sin especificar (${noSpecPct}%)</div>
+        <div class="ns-summary-card">
+          <div class="ns-val" style="color:var(--text-secondary)">${noSpec}</div>
+          <div class="ns-label">Sin especificar (${noSpecPct}%)</div>
         </div>
-        <div class="stat-card" style="flex:1; min-width:110px;">
-          <div class="stat-val">${total}</div>
-          <div class="stat-label">Alumnos únicos</div>
+        <div class="ns-summary-card">
+          <div class="ns-val">${total}</div>
+          <div class="ns-label">Alumnos únicos</div>
         </div>
       </div>
       <div class="gender-stats-bar">
