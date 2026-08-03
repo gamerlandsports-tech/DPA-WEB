@@ -204,6 +204,20 @@ const Utils = {
     return h * 60 + m;
   },
 
+  /* ---- Sort classes by date and time ---- */
+  sortByDateTime(classes, ascending = true) {
+    return [...classes].sort((a, b) => {
+      const dateA = a.date || '';
+      const dateB = b.date || '';
+      if (dateA !== dateB) {
+        return ascending ? dateA.localeCompare(dateB) : dateB.localeCompare(dateA);
+      }
+      const minA = this.timeToMinutes(a.time);
+      const minB = this.timeToMinutes(b.time);
+      return ascending ? minA - minB : minB - minA;
+    });
+  },
+
   /* ---- Sort classes by time ---- */
   sortByTime(classes) {
     return [...classes].sort((a, b) => this.timeToMinutes(a.time) - this.timeToMinutes(b.time));

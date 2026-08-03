@@ -417,7 +417,7 @@ const Storage = {
       completed:  allClasses.filter(c => c.status === 'completed').length,
       cancelled:  allClasses.filter(c => c.status === 'cancelled').length,
       pending:    allClasses.filter(c => !c.status || c.status === 'pending').length,
-      classes:    Utils.sortByTime(allClasses).reverse(), // latest first
+      classes:    Utils.sortByDateTime(allClasses, true), // chronological order
     };
   },
 
