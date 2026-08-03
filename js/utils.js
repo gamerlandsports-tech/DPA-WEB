@@ -61,6 +61,18 @@ const Utils = {
   },
 
   /**
+   * "Lunes 1 de agosto"
+   */
+  formatLong(dateOrStr) {
+    const date = typeof dateOrStr === 'string' ? this.fromISO(dateOrStr) : dateOrStr;
+    const day  = this.DAYS_ES[date.getDay()];
+    const num  = date.getDate();
+    const mon  = this.MONTHS_ES[date.getMonth()];
+    const capDay = day.charAt(0).toUpperCase() + day.slice(1);
+    return `${capDay} ${num} de ${mon}`;
+  },
+
+  /**
    * "agosto 2026" – month + year
    */
   formatMonth(year, month) {

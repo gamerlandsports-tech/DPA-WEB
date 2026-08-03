@@ -44,6 +44,13 @@ const Classes = {
      RENDER TABLE (for section — all classes for a month)
      ================================================================ */
   renderMonthTable(year, month) {
+    const now = new Date();
+    if (year === undefined || year === null) year = (typeof App !== 'undefined' && App._sectionClassesYear) ? App._sectionClassesYear : now.getFullYear();
+    if (month === undefined || month === null) month = (typeof App !== 'undefined' && App._sectionClassesMonth !== undefined) ? App._sectionClassesMonth : now.getMonth();
+
+    const monthLabel = document.getElementById('classesMonthLabel');
+    if (monthLabel) monthLabel.textContent = Utils.formatMonth(year, month);
+
     const monthClasses = Utils.sortByTime(Storage.getClassesByMonth(year, month));
     // Sort by date then time
     monthClasses.sort((a, b) => {

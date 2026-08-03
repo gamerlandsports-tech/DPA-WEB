@@ -400,6 +400,7 @@ const Storage = {
       academia:   allClasses.filter(c => c.tipo === 'academia').length,
       completed:  allClasses.filter(c => c.status === 'completed').length,
       cancelled:  allClasses.filter(c => c.status === 'cancelled').length,
+      pending:    allClasses.filter(c => !c.status || c.status === 'pending').length,
       classes:    Utils.sortByTime(allClasses).reverse(), // latest first
     };
   },
@@ -409,13 +410,14 @@ const Storage = {
      ================================================================ */
   getMonthStats(year, month) {
     const classes = this.getClassesByMonth(year, month);
+    const completedClasses = classes.filter(c => c.status === 'completed');
     const total      = classes.length;
-    const completed  = classes.filter(c => c.status === 'completed').length;
+    const completed  = completedClasses.length;
     const cancelled  = classes.filter(c => c.status === 'cancelled').length;
-    const pending    = classes.filter(c => c.status === 'pending').length;
-    const totalValue = classes.reduce((s, c) => s + (c.value || 0), 0);
-    const totalProf  = classes.reduce((s, c) => s + (c.profCut || 0), 0);
-    const totalClub  = classes.reduce((s, c) => s + (c.clubCut || 0), 0);
+    const pending    = classes.filter(c => !c.status || c.status === 'pending').length;
+    const totalValue = completedClasses.reduce((s, c) => s + (c.value || 0), 0);
+    const totalProf  = completedClasses.reduce((s, c) => s + (c.profCut || 0), 0);
+    const totalClub  = completedClasses.reduce((s, c) => s + (c.clubCut || 0), 0);
     return { total, completed, cancelled, pending, totalValue, totalProf, totalClub, classes };
   },
 

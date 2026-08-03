@@ -44,54 +44,59 @@ const Students = {
           pkgBadge = `<div class="student-package-badge pkg-done">📦 Paquete completado</div>`;
         }
       }
-      const card = document.createElement('div');
-      card.className = 'person-card';
-      card.innerHTML = `
-        <div class="person-avatar">${Utils.initials(s.name, s.lastName)}</div>
-        <div class="person-name">${Utils.fullName(s.name, s.lastName)}</div>
-        <div class="person-meta">
-          ${s.gender === 'masculino' ? '<span class="gender-badge masc">♂ Masculino</span>' : s.gender === 'femenino' ? '<span class="gender-badge fem">♀ Femenino</span>' : ''}
-          ${s.phone ? `📱 ${s.phone}` : ''}
-          ${s.email ? `&nbsp;·&nbsp; ✉ ${s.email}` : ''}
-        </div>
-        <div class="student-type-breakdown">
-          <div class="stb-item">
-            <div class="stb-dot fill-individual"></div>
-            <span class="stb-count">${stats.individual}</span>
-            <span class="stb-label">Individual</span>
+        const pendingBadge = stats.pending > 0
+          ? `<div class="student-pending-badge" style="margin-top:8px; padding:6px 10px; border-radius:6px; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.4); color:#fde047; font-size:11.5px; font-weight:700; text-align:center;">⏳ ${stats.pending} clase${stats.pending !== 1 ? 's' : ''} pendiente${stats.pending !== 1 ? 's' : ''} de pago</div>`
+          : '';
+
+        const card = document.createElement('div');
+        card.className = 'person-card';
+        card.innerHTML = `
+          <div class="person-avatar">${Utils.initials(s.name, s.lastName)}</div>
+          <div class="person-name">${Utils.fullName(s.name, s.lastName)}</div>
+          <div class="person-meta">
+            ${s.gender === 'masculino' ? '<span class="gender-badge masc">♂ Masculino</span>' : s.gender === 'femenino' ? '<span class="gender-badge fem">♀ Femenino</span>' : ''}
+            ${s.phone ? `📱 ${s.phone}` : ''}
+            ${s.email ? `&nbsp;·&nbsp; ✉ ${s.email}` : ''}
           </div>
-          <div class="stb-item">
-            <div class="stb-dot fill-grupal"></div>
-            <span class="stb-count">${stats.grupal}</span>
-            <span class="stb-label">Grupal</span>
+          <div class="student-type-breakdown">
+            <div class="stb-item">
+              <div class="stb-dot fill-individual"></div>
+              <span class="stb-count">${stats.individual}</span>
+              <span class="stb-label">Individual</span>
+            </div>
+            <div class="stb-item">
+              <div class="stb-dot fill-grupal"></div>
+              <span class="stb-count">${stats.grupal}</span>
+              <span class="stb-label">Grupal</span>
+            </div>
+            <div class="stb-item">
+              <div class="stb-dot fill-academia"></div>
+              <span class="stb-count">${stats.academia}</span>
+              <span class="stb-label">Academia</span>
+            </div>
           </div>
-          <div class="stb-item">
-            <div class="stb-dot fill-academia"></div>
-            <span class="stb-count">${stats.academia}</span>
-            <span class="stb-label">Academia</span>
+          <div class="person-stats" style="margin-top:10px">
+            <div class="ps-item">
+              <span class="ps-val green">${stats.completed}</span>
+              <span class="ps-label">Completadas</span>
+            </div>
+            <div class="ps-item">
+              <span class="ps-val" style="color:#eab308">${stats.pending}</span>
+              <span class="ps-label">Pendientes</span>
+            </div>
+            <div class="ps-item">
+              <span class="ps-val red">${stats.cancelled}</span>
+              <span class="ps-label">Canceladas</span>
+            </div>
           </div>
-        </div>
-        <div class="person-stats" style="margin-top:10px">
-          <div class="ps-item">
-            <span class="ps-val">${stats.total}</span>
-            <span class="ps-label">Total</span>
+          ${pendingBadge}
+          <div class="person-actions">
+            <button class="btn btn-ghost btn-sm student-card-detail-btn" data-action="detail-student" data-id="${s.id}">👁 Ver ficha</button>
+            <button class="btn btn-ghost btn-sm" data-action="edit-student" data-id="${s.id}">✏️ Editar</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--red); border-color:rgba(239,68,68,0.3);" data-action="delete-student" data-id="${s.id}">🗑</button>
           </div>
-          <div class="ps-item">
-            <span class="ps-val green">${stats.completed}</span>
-            <span class="ps-label">Completadas</span>
-          </div>
-          <div class="ps-item">
-            <span class="ps-val red">${stats.cancelled}</span>
-            <span class="ps-label">Canceladas</span>
-          </div>
-        </div>
-        <div class="person-actions">
-          <button class="btn btn-ghost btn-sm student-card-detail-btn" data-action="detail-student" data-id="${s.id}">👁 Ver ficha</button>
-          <button class="btn btn-ghost btn-sm" data-action="edit-student" data-id="${s.id}">✏️ Editar</button>
-          <button class="btn btn-ghost btn-sm" style="color:var(--red); border-color:rgba(239,68,68,0.3);" data-action="delete-student" data-id="${s.id}">🗑</button>
-        </div>
-        ${pkgBadge}
-      `;
+          ${pkgBadge}
+        `;
       grid.appendChild(card);
     });
   },
@@ -271,6 +276,10 @@ const Students = {
         <div class="student-stat-box">
           <div class="ssb-val" style="color:var(--green)">${stats.completed}</div>
           <div class="ssb-label">Completadas</div>
+        </div>
+        <div class="student-stat-box">
+          <div class="ssb-val" style="color:#eab308">${stats.pending}</div>
+          <div class="ssb-label">Pendientes</div>
         </div>
         <div class="student-stat-box">
           <div class="ssb-val" style="color:var(--red)">${stats.cancelled}</div>
